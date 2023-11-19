@@ -261,6 +261,7 @@ def extractReviewsFromUploadedTSV(uploadedTSVData = ""):
                 rIdx += 1 # rIDx is the unique index of the review.
 
                 lineArr=line.split('\t') 
+                #print(lineArr)
                 uniqueShopIdx = hash(lineArr[0]) % 100000000 # we hash the shop name, which will be compared for duplicate reviews of the same place.
                 r = ShopReview(rID = rIdx, shopIndex = uniqueShopIdx, shopName = lineArr[0], extraComments = lineArr[10]) 
                 # one-liner casts all of the values to ints.

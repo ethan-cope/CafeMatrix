@@ -64,16 +64,53 @@ def drawSelectPane():
         dbc.CardBody([
             html.H4("Matrix Options", className="card-title"),
             html.Div([
+
                 dbc.Card(
                 dbc.CardBody([
-                html.H5("View Options"),
-                dcc.RadioItems(
-                    ['Value vs. Study','Study vs. Ambiance','Value vs. Ambiance'],
-                    defaultView,
-                    id='axesSelectOption',
-                    labelStyle={'marginTop':'5px'}
-                ),
+                    dbc.Row([
+
+                        dbc.Col([
+
+                            html.H5("View Options"),
+                            dcc.RadioItems(
+                                ['Value vs. Study','Study vs. Ambiance','Value vs. Ambiance'],
+                                defaultView,
+                                id='axesSelectOption',
+                                labelStyle={'marginTop':'5px'}
+                            ),
+                        ]),
+
+                        dbc.Col([
+                            html.H5("Update Matrix"),
+                            dcc.Upload(         
+                            id='upload-data',         
+                            children=html.Div([             
+                                               'Upload Tab-Separated .txt File'
+                                              ]),         
+                           style={             
+                                  'width': '100%',             
+                                  'height': '60px',             
+                                  'lineHeight': '60px',             
+                                  'borderWidth': '1px',             
+                                  'borderStyle': 'dashed',             
+                                  'borderRadius': '5px',             
+                                  'textAlign': 'center',             
+                                  'margin': '5px',
+                                  },         
+
+                                # Allow multiple files to be uploaded         
+                                # of course, actually trying to use multiple files breaks the program
+                                # but I already wrote it to use multiple so IDK
+                            multiple=True
+                            ),     
+
+                        ]) 
+                    ]),
+
                 ])),
+                # end of cards
+
+
                 dcc.Graph(
                     id='breakdown-graph',
                     style={'width':'90vh','height':'74vh'}
@@ -96,25 +133,7 @@ App.layout = html.Div([
             ])
         ])
     ),
-    dcc.Upload(         
-               id='upload-data',         
-               children=html.Div([             
-                                  'Drag and Drop or ',             
-                                  html.A('Select Files')         
-                                  ]),         
-               style={             
-                      'width': '100%',             
-                      'height': '60px',             
-                      'lineHeight': '60px',             
-                      'borderWidth': '1px',             
-                      'borderStyle': 'dashed',             
-                      'borderRadius': '5px',             
-                      'textAlign': 'center',             
-                      'margin': '10px'         },         
-               # Allow multiple files to be uploaded         
-               multiple=True     
-               ),     
-    html.Div(id='output-data-upload'),
+
     dcc.Store(id='user-ratings', storage_type='local'),
 ])
 
