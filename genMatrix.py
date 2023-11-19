@@ -5,6 +5,8 @@ from random import randrange
 import hashlib
 import time
 
+import json
+
 import numpy  as np
 import pandas as pd
 
@@ -157,7 +159,7 @@ Total:          %.01d / 30
 def generateShopBarChart(indexData, shopName):
     fig = go.Figure()
 
-    #TODO::::: SORT DATAFRAME BY LOW SO THE WORST RATED STUFF IS AT BOTTOM (OR MAYBE TOP?)
+    #TODO::::: SORT DATAFRAME BY LOW SO THE WORST RATED STUFF IS AT BOTTOM (OR MAYBE TOP?) (WHY?)
 
     # making some normalized values to show users on mouse-over
     # otherwise, the calculations don't make sense
@@ -206,11 +208,11 @@ def generateShopBarChart(indexData, shopName):
 
 
 
-def generateShopsMatrix(reviewsArray):
-    # accepts an array of reviews for different coffee shops
+def generateMatrix(reviewsArray):
+    # accepts an array of review -> Dataframe elements 
     # returns a figure that's the matrix
-    dfArray = list(map(lambda r: r.toDfElement(),reviewsArray))
-    df  = pd.DataFrame(dfArray)
+    print(json.dumps(reviewsArray[0], indent=2))
+    df  = pd.DataFrame(reviewsArray)
 
     # now find a good way to print this boy
     fig =  px.scatter_3d(df,
@@ -238,24 +240,64 @@ def generateShopsMatrix(reviewsArray):
 
     return fig
 
-def extractReviewsFromCSV(csvPath):
+def extractReviewsFromUploadedTSV(uploadedTSVData = ""):
+    """
+    This should operate the same as the other "extractreviews" method.
+    it'll take in an array, with each index being a line of the TSV file.
+    This allows for maximum crossover with code from the other example.
+    """
+
     reviewsArr = []
-    f = open(csvPath,"r")
 
-    rIdx = 0
-    for line in f:
-        if line.split('\t')[0] == "Shop Name":
-            continue
-        else:
-            rIdx += 1 # rIDx is the unique index of the review.
+    if uploadedTSVData:
+        # this is for testing 
 
-            lineArr=line.split('\t') 
-            uniqueShopIdx = hash(lineArr[0]) % 100000000 # we hash the shop name, which will be compared for duplicate reviews of the same place.
-            r = ShopReview(rID = rIdx, shopIndex = uniqueShopIdx, shopName = lineArr[0], extraComments = lineArr[10]) 
-            # one-liner casts all of the values to ints.
-            r.calcIndices(list(map(lambda val: int(val), lineArr[1:10])))
-            reviewsArr.append(r)
-            #print(r)
+        rIdx = 0
+        for line in uploadedTSVData:
+            if line.split('\t')[0] == "Shop Name":
+                #skipping the first line of the TSV file
+                continue
+            else:
+                rIdx += 1 # rIDx is the unique index of the review.
+
+                lineArr=line.split('\t') 
+                uniqueShopIdx = hash(lineArr[0]) % 100000000 # we hash the shop name, which will be compared for duplicate reviews of the same place.
+                r = ShopReview(rID = rIdx, shopIndex = uniqueShopIdx, shopName = lineArr[0], extraComments = lineArr[10]) 
+                # one-liner casts all of the values to ints.
+                r.calcIndices(list(map(lambda val: int(val), lineArr[1:10])))
+                reviewsArr.append(r.toDfElement())
+                #change from review object to DF Element
+                #print(r)
+
+    return reviewsArr
+
+
+def extractReviewsFromLocalTSV(localTSVPath = ""):
+    """
+    This method takes an event from a downloaded file OR a path to a local TSV (which I will shortly change as of 11/18/23) and spits out an array of review objects. 
+    Why review objects? Because I wanted to mess with OOP even though a dictionary would have probably worked just as well. 0_0
+    """
+    reviewsArr = []
+
+    if localTSVPath:
+        # this is for testing 
+        f = open(localTSVPath,"r")
+
+        rIdx = 0
+        for line in f:
+            if line.split('\t')[0] == "Shop Name":
+                continue
+            else:
+                rIdx += 1 # rIDx is the unique index of the review.
+
+                lineArr=line.split('\t') 
+                uniqueShopIdx = hash(lineArr[0]) % 100000000 # we hash the shop name, which will be compared for duplicate reviews of the same place.
+                r = ShopReview(rID = rIdx, shopIndex = uniqueShopIdx, shopName = lineArr[0], extraComments = lineArr[10]) 
+                # one-liner casts all of the values to ints.
+                r.calcIndices(list(map(lambda val: int(val), lineArr[1:10])))
+                reviewsArr.append(r.toDfElement())
+                #change from review object to DF Element
+                #print(r)
 
     return reviewsArr
 
@@ -275,7 +317,11 @@ for i in range(0,len(shopNames)):
     print(r)
 """
 
+"""
+no need for this wrapper method anymore, renamed generateShopsMatrix to generateMatrix
 def generateMatrix():
-    reviews = extractReviewsFromCSV("ratings.csv")
+    reviews = extractReviewsFromLocalTSV(localTSVPath = "ratings.csv")
+    reviews = extractReviewsFromUploadedTSV(externalTSVArray):
     figure = generateShopsMatrix(reviews)
     return figure
+"""
