@@ -211,7 +211,7 @@ def generateShopBarChart(indexData, shopName):
 def generateMatrix(reviewsArray):
     # accepts an array of review -> Dataframe elements 
     # returns a figure that's the matrix
-    print(json.dumps(reviewsArray[0], indent=2))
+    #print(json.dumps(reviewsArray[0], indent=2))
     df  = pd.DataFrame(reviewsArray)
 
     # now find a good way to print this boy

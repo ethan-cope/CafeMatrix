@@ -1,6 +1,7 @@
 #!./env/bin/python
 
 from dash import Dash, dcc, html, Input, Output, State, callback
+from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 import plotly.express as px      
 import plotly.graph_objects as go
@@ -13,10 +14,10 @@ defaultView = 'Value vs. Study'
 
 # initial figure stuff
 # globalCookieReviewArray is part of a failed experiment. I need to do caching if I want to do this too.
-globalCookieReviewArray = []
-globalCookieReviewArray = extractReviewsFromLocalTSV(localTSVPath = "ratings.csv")
+#globalCookieReviewArray = extractReviewsFromLocalTSV(localTSVPath = "default.csv")
 
-fig = generateMatrix(globalCookieReviewArray)
+#fig = generateMatrix(globalCookieReviewArray)
+fig =  px.scatter_3d()
 
 views = {
         "AmbVsStu": {'x': 0, 'y': 2, 'z': 0},
@@ -48,7 +49,7 @@ def drawCafeMatrix():
             html.H4("Cafe Matrix", className="card-title"),
             html.Div([dcc.Graph(
                 figure=fig, 
-                id='basic-interactions',
+                id='big-matrix',
                 style={'width':'90vh','height':'90vh'})
             ])
         ])
@@ -114,41 +115,42 @@ App.layout = html.Div([
                multiple=True     
                ),     
     html.Div(id='output-data-upload'),
+    dcc.Store(id='user-ratings', storage_type='local'),
 ])
 
-@callback(Output('output-data-upload', 'children'),
-              Input('upload-data', 'contents'),
-              State('upload-data', 'filename'),
-              State('upload-data', 'last_modified'))
-def update_output(list_of_contents, list_of_names, list_of_dates):
-    if list_of_contents:
-        contentData = list_of_contents[0].split(',')[1]
-        dataString = base64.b64decode(contentData).decode('ascii').strip()
-        # dataString is the CSV file as a string
-        dataArray=dataString.split('\n')
+@callback(Output('user-ratings', 'data'),
+          Input('upload-data', 'contents'),
+          State('user-ratings', 'data'))
+def update_output(list_of_contents, stored_data):
+    if list_of_contents is None:
+        raise PreventUpdate
 
-        # this doesnt' work and global variables don't work. 
-        # need to migrate to cookies and stuff.
-        globalCookieReviewArray = extractReviewsFromUploadedTSV(dataArray)
+    contentData = list_of_contents[0].split(',')[1]
+    dataString = base64.b64decode(contentData).decode('ascii').strip()
+    # dataString is the CSV file as a string
+    dataArray=dataString.split('\n')
 
-        print(len(globalCookieReviewArray))
+    # this doesnt' work and global variables don't work. 
+    # need to migrate to cookies and stuff.
 
-        # need way to update graph figure without clicking it and being able to return directly
-        # reparseGraphView(defaultView)
-        # extracting content data from import format
-        
+    return extractReviewsFromUploadedTSV(dataArray)
+
 
 @callback(
-    Output('basic-interactions', 'figure'),
-    Input('axesSelectOption', 'value')
+    Output('big-matrix', 'figure'),
+    Input('axesSelectOption', 'value'),
+    Input('user-ratings', 'data')
 )
 
-def reparseGraphView(cameraView):
+def reparseGraphView(cameraView,ratingData):
     '''
     This callback re-generates the matrix, but changes the view depending on the user's selection on the radio buttons.
     '''
-    fig = generateMatrix(globalCookieReviewArray)
-    print(len(globalCookieReviewArray))
+    #print(ratingData)
+    if ratingData is None:
+        raise PreventUpdate
+    else:
+        fig = generateMatrix(ratingData)
     views = {
             "Value vs. Study": {'x': 2, 'y': 0, 'z': 0.1},
             "Study vs. Ambiance": {'x': 0.01, 'y': 2, 'z': 0},
@@ -177,7 +179,7 @@ def reparseGraphView(cameraView):
 
 @callback(
     Output('breakdown-graph', 'figure'),
-    Input('basic-interactions', 'clickData')
+    Input('big-matrix', 'clickData')
 )
 def displayBarChart(clickData):
     '''
