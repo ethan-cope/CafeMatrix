@@ -1,0 +1,3 @@
+.js-plotly-plot .plotly, .js-plotly-plot .plotly div {
+	cursor: pointer;
+}
