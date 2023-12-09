@@ -3,11 +3,12 @@ import plotly.express as px
 import plotly.graph_objects as go
 from random import randrange
 import hashlib
-import time
 
-import json
+#import json
+#import numpy  as np
+# import time
+# not needed as of 11.26.2023
 
-import numpy  as np
 import pandas as pd
 
 # coffee spreadsheeters, rejoice.
@@ -29,7 +30,7 @@ DefaultSubIndices = [["vibe", "seating", "spark", "taste", "cost", "menu", "spac
 
         # [TASTE] - SUBJECTIVE ranking of how good the coffee was. 
         # [COST] - OBJECTIVE price of a cup of drip coffee here. 
-        # [MENU / SPARK] - SUBJECTIVE ranking of specials, or quality. Do they roast or sell their own beans? Have cool speicals? Good food / cocktails also? all that goes here. 
+        # [MENU / SPARK] - SUBJECTIVE ranking of specials, or quality. Do they roast or sell their own beans? Have cool specials? Good food / cocktails also? all that goes here. 
 
         # [STUDY INDEX]
 
@@ -38,7 +39,7 @@ DefaultSubIndices = [["vibe", "seating", "spark", "taste", "cost", "menu", "spac
         # 0-5 (not many spaces - normal - tons of space) 
         # [TECH-FRIENDLINESS] - OBJECTIVE ranking of internet functionality and outlet availability. 
         # 0-5, (spotty / nonfunctional internet - fine internet) ditto for outlets
-        # [ACCESSABILITY] - SEMI-OBJECTIVE ranking of how late / early it's open, and what days. 
+        # [ACCESSIBILITY] - SEMI-OBJECTIVE ranking of how late / early it's open, and what days. 
         # Is it close to highways / public transit / easy to get to? Is parking good? 
         # 0-5. (hard to reach / bad hours - great hours / convenient location)
 
@@ -168,6 +169,8 @@ def generateShopBarChart(indexData, shopName):
     df["normalizedVal"] = row
     df["normalizedScale"] = df.loc[:,"scaling"] * 10
     df["normalizedRate"] = df.loc[:,"rating"] - 1
+
+    # TODO: afraid to change this but get rid of the 0?
     df["normalizedRate"] = df["normalizedRate"].clip(lower = 0) # magic replaces all negatives with 0
     df["normalizedVal"] = df["normalizedVal"].clip(lower = .25) # magic replaces all negatives with .25 (so the bar is still visible, doesn't effect ranking)
     
@@ -209,12 +212,12 @@ def generateShopBarChart(indexData, shopName):
 
 
 def generateMatrix(reviewsArray):
-    # accepts an array of review -> Dataframe elements 
-    # returns a figure that's the matrix
+    """ accepts an array of review -> Dataframe elements 
+        returns a figure that's the matrix
+    """
     #print(json.dumps(reviewsArray[0], indent=2))
     df  = pd.DataFrame(reviewsArray)
 
-    # now find a good way to print this boy
     fig =  px.scatter_3d(df,
                          x='ambianceIdx',
                          y='valueIdx',
@@ -245,37 +248,74 @@ def extractReviewsFromUploadedTSV(uploadedTSVData = ""):
     This should operate the same as the other "extractreviews" method.
     it'll take in an array, with each index being a line of the TSV file.
     This allows for maximum crossover with code from the other example.
+
+    Errors handled:
+    - no comments section
+    - not a long enough list (unfinished values)
+    - values are not a number
+    - value not between 1 and 5
+
+    There will be more, but this is good for a beta!
     """
 
     reviewsArr = []
 
     if uploadedTSVData:
-        # this is for testing 
 
-        rIdx = 0
+        rIdx = -1 #initialized to -1.
+        # it gets set to 0 when we detect the row starting with "Shop Name", which signals that every further row is a cafe review
         for line in uploadedTSVData:
-            if line.split('\t')[0] == "Shop Name":
-                #skipping the first line of the TSV file
+
+            if "Shop Name" in line.split('\t')[0]:
+                rIdx = 0
+                continue
+            elif (rIdx == -1):
                 continue
             else:
-                rIdx += 1 # rIDx is the unique index of the review.
+                try:
+                    rIdx += 1 # rIDx is the unique index of the review, NOT the cafe itself.
+                    # if we ever want to support multi-reviews, etc.
 
-                lineArr=line.split('\t') 
-                #print(lineArr)
-                uniqueShopIdx = hash(lineArr[0]) % 100000000 # we hash the shop name, which will be compared for duplicate reviews of the same place.
-                r = ShopReview(rID = rIdx, shopIndex = uniqueShopIdx, shopName = lineArr[0], extraComments = lineArr[10]) 
-                # one-liner casts all of the values to ints.
-                r.calcIndices(list(map(lambda val: int(val), lineArr[1:10])))
-                reviewsArr.append(r.toDfElement())
-                #change from review object to DF Element
-                #print(r)
+                    lineArr=line.split('\t') 
+                    #print(lineArr)
+                    uniqueShopIdx = hash(lineArr[0]) % 100000000 # we hash the shop name, which will be compared for duplicate reviews of the same place if that's ever wanted to be supported.
+                    # this is for future database integration if that's ever desired
+
+                    #print("linelen = %s" % len(lineArr))
+
+                    r = ShopReview(rID = rIdx, shopIndex = uniqueShopIdx, shopName = lineArr[0], extraComments = lineArr[10] if len(lineArr) > 10 else "") 
+                    # If no comments, don't throw error (inline conditional)
+
+                    r.calcIndices(list(map(lambda val: returnValidIndexValue(val), lineArr[1:10])))
+                    # one-liner casts all of the values to ints, and makes values fall between correct values.
+                    reviewsArr.append(r.toDfElement())
+                    #change from review object to DF Element
+
+                    #print(r)
+                except IndexError as e:
+                    print("%s\n Error generating indices for cafe. Continuing..." % (e))
+                except ValueError as e:
+                    print("%s\n Invalid Index: Continuing..." % (e))
 
     return reviewsArr
 
+def returnValidIndexValue(rawVal):
+    """
+    Coerce user's ranking into a 1-5 ranking
+    """
+    indexVal = int(rawVal)
+
+    if indexVal < 1:
+        indexVal = 1
+    elif indexVal > 5:
+        indexVal = 5
+    #coerce into correct value
+
+    return indexVal
 
 def extractReviewsFromLocalTSV(localTSVPath = ""):
     """
-    This method takes an event from a downloaded file OR a path to a local TSV (which I will shortly change as of 11/18/23) and spits out an array of review objects. 
+    This method takes an a path to a local TSV (which I will shortly change as of 11/18/23) and spits out an array of review objects. 
     Why review objects? Because I wanted to mess with OOP even though a dictionary would have probably worked just as well. 0_0
     """
     reviewsArr = []
@@ -303,6 +343,7 @@ def extractReviewsFromLocalTSV(localTSVPath = ""):
     return reviewsArr
 
 # this block generates a bunch of random reviews for testing purposes.
+
 """
 shopNames = ["Ding Tea", "BoneAppleTea", "ShareTea", "Chatime", "TeaLattebar", "Starbucks"]
 # generating a few reviews

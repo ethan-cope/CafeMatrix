@@ -6,32 +6,29 @@ import dash_bootstrap_components as dbc
 import plotly.express as px      
 import plotly.graph_objects as go
 import base64
-import pandas as pd
-import json
 from genMatrix import generateMatrix, generateShopBarChart, extractReviewsFromLocalTSV, extractReviewsFromUploadedTSV
 
-defaultView = 'Value vs. Study'
+# import json
+# import pandas as pd
+# not needed as of 11.26.2023
 
-# initial figure stuff
-# globalCookieReviewArray is part of a failed experiment. I need to do caching if I want to do this too.
-#globalCookieReviewArray = extractReviewsFromLocalTSV(localTSVPath = "default.csv")
+#TODO: use cool monospaced font and dark mode?
+#TODO: user guide
+#TODO: user-definable scaling
+#TODO: points are selectable cursor
 
-#fig = generateMatrix(globalCookieReviewArray)
+# initial figure 
+defaultView = 'Value vs. Study' # Global variable, but read-only so should be ok
 fig =  px.scatter_3d()
 
-views = {
-        "AmbVsStu": {'x': 0, 'y': 2, 'z': 0},
-        "ValVsStu": {'x': 2, 'y': 0, 'z': 0.1},
-        "ValVsAmb": {'x': 0, 'y': 0, 'z': 2} # this view is broken, though. maybe you'll need to encode this stuff.
-        }
-camera = {"eye": views["ValVsStu"]}
-
+camera = {"eye": {'x': 2, 'y': 0, 'z': 0.1}}
 fig.update_layout(
     scene_camera=camera,
     clickmode='event+select'
 )
 
-App = Dash(
+# adding bootstrap
+App = Dash(__name__,
         external_stylesheets=[dbc.themes.BOOTSTRAP]
 )
 
@@ -46,11 +43,15 @@ def drawCafeMatrix():
     '''
     return dbc.Card([
         dbc.CardBody([
-            html.H4("Cafe Matrix", className="card-title"),
+            html.H4("Cafe Matrix", className="card-title card-mono"),
             html.Div([dcc.Graph(
                 figure=fig, 
                 id='big-matrix',
-                style={'width':'90vh','height':'90vh'})
+                style={'width':'90vh',
+                       'height':'90vh',
+                       'cursor':'pointer',
+                       }),
+
             ])
         ])
     ])
@@ -62,9 +63,8 @@ def drawSelectPane():
     '''
     return dbc.Card([
         dbc.CardBody([
-            html.H4("Matrix Options", className="card-title"),
+            html.H4("Matrix Options", className="card-title card-mono"),
             html.Div([
-
                 dbc.Card(
                 dbc.CardBody([
                     dbc.Row([
@@ -76,7 +76,8 @@ def drawSelectPane():
                                 ['Value vs. Study','Study vs. Ambiance','Value vs. Ambiance'],
                                 defaultView,
                                 id='axesSelectOption',
-                                labelStyle={'marginTop':'5px'}
+                                labelStyle={'marginTop':'5px',
+                                            'cursor': 'pointer',}
                             ),
                         ]),
 
@@ -96,11 +97,13 @@ def drawSelectPane():
                                   'borderRadius': '5px',             
                                   'textAlign': 'center',             
                                   'margin': '5px',
+                                  'cursor': 'pointer',
                                   },         
 
                                 # Allow multiple files to be uploaded         
                                 # of course, actually trying to use multiple files breaks the program
-                                # but I already wrote it to use multiple so IDK
+                                # but I already wrote it to use the multiple option
+                                # TODO:: change this it make multiple false.
                             multiple=True
                             ),     
 
@@ -141,19 +144,18 @@ App.layout = html.Div([
           Input('upload-data', 'contents'),
           State('user-ratings', 'data'))
 def update_output(list_of_contents, stored_data):
+    """
+    This callback is triggered if the user uploads new data through the dialog boxes.
+    """
     if list_of_contents is None:
         raise PreventUpdate
 
     contentData = list_of_contents[0].split(',')[1]
     dataString = base64.b64decode(contentData).decode('ascii').strip()
-    # dataString is the CSV file as a string
+    # dataString is the TSV file as a string
     dataArray=dataString.split('\n')
 
-    # this doesnt' work and global variables don't work. 
-    # need to migrate to cookies and stuff.
-
     return extractReviewsFromUploadedTSV(dataArray)
-
 
 @callback(
     Output('big-matrix', 'figure'),
@@ -164,6 +166,7 @@ def update_output(list_of_contents, stored_data):
 def reparseGraphView(cameraView,ratingData):
     '''
     This callback re-generates the matrix, but changes the view depending on the user's selection on the radio buttons.
+    Maybe this can be split into two callbacks which determine if the graph needs to be reparsed or not?
     '''
     #print(ratingData)
     if ratingData is None:
@@ -174,20 +177,18 @@ def reparseGraphView(cameraView,ratingData):
             "Value vs. Study": {'x': 2, 'y': 0, 'z': 0.1},
             "Study vs. Ambiance": {'x': 0.01, 'y': 2, 'z': 0},
             "Value vs. Ambiance": {'x': 0, 'y': 0, 'z': 2} 
-            # this one is a little messed up, b/c the graph is on the wrong side.
     }
 
     scenes = {
             "Value vs. Study": {'yaxis': {}},
             "Study vs. Ambiance": {'yaxis': {'autorange':'reversed'}},
             "Value vs. Ambiance": {'zaxis': {'autorange':'reversed'}, 'yaxis': {'autorange':'reversed'}, 'xaxis': {'autorange':'reversed'}}
-            # handles the axes reversed or not
+            # some views need to be reversed so the best review is always top+right+back.
     }
 
     camera = {"eye": views[cameraView]}
     # handles direction we're looking
     sceneDir = scenes[cameraView]
-    # handles the 
 
     fig.update_layout(
         scene_camera=camera,
