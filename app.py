@@ -12,10 +12,9 @@ from genMatrix import generateMatrix, generateShopBarChart, extractReviewsFromLo
 # import pandas as pd
 # not needed as of 11.26.2023
 
-#TODO: use cool monospaced font and dark mode?
 #TODO: user guide
 #TODO: user-definable scaling
-#TODO: points are selectable cursor
+#TODO: location selection
 
 # initial figure 
 defaultView = 'Value vs. Study' # Global variable, but read-only so should be ok
@@ -50,11 +49,35 @@ def drawCafeMatrix():
                 style={'width':'90vh',
                        'height':'90vh',
                        'cursor':'pointer',
-                       }),
+                       }
+                ),
 
             ])
         ])
     ])
+
+def drawModalStartupGuide():
+    return [
+        html.H4("Entering the Matrix",className="card-mono"),
+        html.Ol( 
+            children = [
+                html.Li(children = ["Rate your favorite cafes with ", html.A("this spreadsheet template", href="https://docs.google.com/spreadsheets/d/1qIiK-8SHgQ4qp5Nry18LhIE_MRTTrKplktnkObQukdA/edit#gid=487713447",target="_blank"),"!"]), 
+                html.Li(children = ["In Sheets, download the spreadsheet as a .tsv file:", html.P("(File > Download > Tab Separated Values (.tsv))", className="card-mono")]), 
+                html.Li(children = ["Use the ", html.B("Upload .tsv"), " button to warp your reviews to the Matrix!"]), 
+
+            ]
+        ),
+        html.H4("Navigating the Matrix",className="card-mono"),
+        html.Ol(children = [
+            html.Li("Select a preset view, or click and drag the Matrix to your favorite angle!"),
+            html.Li("Hover over a cafe datapoint to glance at its ratings."),
+            html.Li("Click (or tap) a cafe datapoint for the most in-depth sub-matrix statistics."),
+            html.Li("The Matrix remembers your reviews, storing them in your browser. No passwords needed!"),
+            html.Li("Update the Matrix by uploading new .tsv."),
+        ]),
+        html.H4("Welcome to the CafeMatrix!", className="card-mono"),
+    ]
+
 
 def drawSelectPane():       
     '''
@@ -85,34 +108,61 @@ def drawSelectPane():
                             html.H5("Update Matrix"),
                             dcc.Upload(         
                             id='upload-data',         
-                            children=html.Div([             
-                                               'Upload Tab-Separated .txt File'
-                                              ]),         
-                           style={             
-                                  'width': '100%',             
-                                  'height': '60px',             
-                                  'lineHeight': '60px',             
-                                  'borderWidth': '1px',             
-                                  'borderStyle': 'dashed',             
-                                  'borderRadius': '5px',             
-                                  'textAlign': 'center',             
-                                  'margin': '5px',
-                                  'cursor': 'pointer',
-                                  },         
-
+                            children=html.Div(
+                                [             
+                                    'Upload .tsv'
+                                ]),         
+                                className = "btn btn-light",
+                                style={             
+                                    'width': '100%',             
+                                    'height': '60px',             
+                                    'display': 'flex',             
+                                    'flexDirection': 'column',
+                                    'justifyContent': 'center',
+                                    'textAlign': 'center',             
+                                },
                                 # Allow multiple files to be uploaded         
                                 # of course, actually trying to use multiple files breaks the program
                                 # but I already wrote it to use the multiple option
                                 # TODO:: change this it make multiple false.
-                            multiple=True
+                                multiple=True
                             ),     
 
-                        ]) 
+                        ]),
+
+
+                        dbc.Col([
+                            # you'll have to make this a method b/c this is way too big
+                            html.H5("Getting Started"),
+                            dbc.Button("Take a tour", id="open", n_clicks=0, className = "btn-light",
+                            style={             
+                                  'width': '100%',             
+                                  'height': '60px',             
+                                  #'lineHeight': '60px',             
+                                  #'borderWidth': '1px',             
+                                  #'borderStyle': 'dashed',             
+                                  #'borderRadius': '5px',             
+                                  #'textAlign': 'center',             
+                                  #'margin': '5px',
+                                  #'cursor': 'pointer',
+                            }),
+                            dbc.Modal(
+                                [
+                                    dbc.ModalBody(drawModalStartupGuide()),
+                                    dbc.ModalFooter(
+                                        dbc.Button(
+                                            "Close", id="close", className="ms-auto btn-light", n_clicks=0
+                                        )
+                                    ),
+                                ],
+                                id="modal",
+                                size="lg",
+                                is_open=False,
+                            ),
+                        ])
                     ]),
 
                 ])),
-                # end of cards
-
 
                 dcc.Graph(
                     id='breakdown-graph',
@@ -157,6 +207,7 @@ def update_output(list_of_contents, stored_data):
 
     return extractReviewsFromUploadedTSV(dataArray)
 
+# tried to make this client-side but it's hard to do. best to keep this combined for now.
 @callback(
     Output('big-matrix', 'figure'),
     Input('axesSelectOption', 'value'),
@@ -197,6 +248,8 @@ def reparseGraphView(cameraView,ratingData):
     )
     return fig
 
+# don't think we can generate this client-side, so we're stuck with this code
+# hopefully minimal implications for performance / build minutes
 @callback(
     Output('breakdown-graph', 'figure'),
     Input('big-matrix', 'clickData')
@@ -211,5 +264,15 @@ def displayBarChart(clickData):
         shopName = (clickData["points"][0]['text'])
         fig = generateShopBarChart(indexData, shopName)
     return fig
+
+@callback(
+    Output("modal", "is_open"),
+    [Input("open", "n_clicks"), Input("close", "n_clicks")],
+    [State("modal", "is_open")],
+)
+def toggle_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
 
 App.run_server(debug=True, use_reloader=True)
