@@ -12,28 +12,22 @@ from genMatrix import generateMatrix, generateShopBarChart, extractReviewsFromLo
 # import pandas as pd
 # not needed as of 11.26.2023
 
-#TODO: user guide
 #TODO: user-definable scaling
 #TODO: location selection
 
 # initial figure 
-defaultView = 'Value vs. Study' # Global variable, but read-only so should be ok
+defaultView = 'Default' # Global variable, but read-only so should be ok
 fig =  px.scatter_3d()
 
-camera = {"eye": {'x': 2, 'y': 0, 'z': 0.1}}
-fig.update_layout(
-    scene_camera=camera,
-    clickmode='event+select'
-)
-
-# adding bootstrap
 App = Dash(__name__,
-        external_stylesheets=[dbc.themes.BOOTSTRAP]
+    # adding bootstrap
+    external_stylesheets=[dbc.themes.BOOTSTRAP]
 )
 
 colors = {
-        'background': '#FFFDD1'
+    'background': '#FFFDD1'
 }
+background = "#e5ecf6"
 
 def drawCafeMatrix():
     '''
@@ -96,8 +90,8 @@ def drawSelectPane():
 
                             html.H5("View Options"),
                             dcc.RadioItems(
-                                ['Value vs. Study','Study vs. Ambiance','Value vs. Ambiance'],
-                                defaultView,
+                                ['Default', 'Value vs. Study','Study vs. Ambiance','Value vs. Ambiance'],
+                                'Default',
                                 id='axesSelectOption',
                                 labelStyle={'marginTop':'5px',
                                             'cursor': 'pointer',}
@@ -133,8 +127,8 @@ def drawSelectPane():
 
                         dbc.Col([
                             # you'll have to make this a method b/c this is way too big
-                            html.H5("Getting Started"),
-                            dbc.Button("Take a tour", id="open", n_clicks=0, className = "btn-light",
+                            html.H5("Enter the Matrix"),
+                            dbc.Button("Get Started!", id="open", n_clicks=0, className = "btn-light",
                             style={             
                                   'width': '100%',             
                                   'height': '60px',             
@@ -225,12 +219,14 @@ def reparseGraphView(cameraView,ratingData):
     else:
         fig = generateMatrix(ratingData)
     views = {
+            "Default": {},
             "Value vs. Study": {'x': 2, 'y': 0, 'z': 0.1},
             "Study vs. Ambiance": {'x': 0.01, 'y': 2, 'z': 0},
-            "Value vs. Ambiance": {'x': 0, 'y': 0, 'z': 2} 
+            "Value vs. Ambiance": {'x': 0, 'y': 0.01, 'z': 2} 
     }
 
     scenes = {
+            "Default": {},
             "Value vs. Study": {'yaxis': {}},
             "Study vs. Ambiance": {'yaxis': {'autorange':'reversed'}},
             "Value vs. Ambiance": {'zaxis': {'autorange':'reversed'}, 'yaxis': {'autorange':'reversed'}, 'xaxis': {'autorange':'reversed'}}
@@ -246,6 +242,7 @@ def reparseGraphView(cameraView,ratingData):
         scene=sceneDir,
         clickmode='event+select'
     )
+
     return fig
 
 # don't think we can generate this client-side, so we're stuck with this code
@@ -259,7 +256,37 @@ def displayBarChart(clickData):
     This callback generates the bar chart for the matrix the user clicks on.
     '''
     fig = go.Figure() 
-    if clickData:
+
+    if clickData == None:
+        #pretty blank figure
+        fig.update_layout(
+            paper_bgcolor=background,
+            plot_bgcolor=background,    
+            xaxis = dict(
+                visible=False,
+                showgrid=False,
+                gridcolor=background,
+                zerolinecolor=background),
+            yaxis = dict(
+                visible=False,
+                showgrid=False,
+                gridcolor=background,
+                zerolinecolor=background
+                ),
+            annotations = [
+                {
+                    "text": "Select a datapoint to view the sub-matrix",
+                    "xref": "paper",
+                    "yref": "paper",
+                    "showarrow": False,
+                    "font": {
+                        "size": 22
+                    }
+                }
+            ]
+        )
+
+    elif clickData:
         indexData = clickData["points"][0]['customdata'][1]
         shopName = (clickData["points"][0]['text'])
         fig = generateShopBarChart(indexData, shopName)
