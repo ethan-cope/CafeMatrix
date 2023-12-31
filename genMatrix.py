@@ -243,6 +243,42 @@ def generateMatrix(reviewsArray):
 
     return fig
 
+def generateEmptyFigure(msg = "No Figure Found"):
+    background = "#e5ecf6"
+    fig = go.Figure() 
+    #pretty blank figure
+    fig.update_layout(
+        paper_bgcolor=background,
+        plot_bgcolor=background,    
+        xaxis = dict(
+            visible=False,
+            showgrid=False,
+            gridcolor=background,
+            zerolinecolor=background),
+        yaxis = dict(
+            visible=False,
+            showgrid=False,
+            gridcolor=background,
+            zerolinecolor=background
+            ),
+        annotations = [
+            {
+                "text": msg,
+                "xref": "paper",
+                "yref": "paper",
+                "showarrow": False,
+                "font": {
+                    "size": 22
+                }
+            }
+        ]
+    )
+
+    return fig
+
+
+
+
 def extractReviewsFromUploadedTSV(uploadedTSVData = ""):
     """
     This should operate the same as the other "extractreviews" method.

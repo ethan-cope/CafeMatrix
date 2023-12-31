@@ -6,7 +6,7 @@ import dash_bootstrap_components as dbc
 import plotly.express as px      
 import plotly.graph_objects as go
 import base64
-from genMatrix import generateMatrix, generateShopBarChart, extractReviewsFromLocalTSV, extractReviewsFromUploadedTSV
+from genMatrix import generateMatrix, generateShopBarChart, generateEmptyFigure, extractReviewsFromLocalTSV, extractReviewsFromUploadedTSV
 
 # import json
 # import pandas as pd
@@ -14,12 +14,16 @@ from genMatrix import generateMatrix, generateShopBarChart, extractReviewsFromLo
 
 #TODO: user-definable scaling
 #TODO: location selection
+#TODO: better formatting for plotly graphs and different-sized screens
+    # benchmark 13-inch computers since that's what most ppl have
 
 # initial figure 
 defaultView = 'Default' # Global variable, but read-only so should be ok
-fig =  px.scatter_3d()
+fig = px.scatter_3d()
 
-App = Dash(__name__,
+App = Dash(
+    __name__,
+    title="CafeMatrix",
     # adding bootstrap
     external_stylesheets=[dbc.themes.BOOTSTRAP]
 )
@@ -57,7 +61,7 @@ def drawModalStartupGuide():
             children = [
                 html.Li(children = ["Rate your favorite cafes with ", html.A("this spreadsheet template", href="https://docs.google.com/spreadsheets/d/1qIiK-8SHgQ4qp5Nry18LhIE_MRTTrKplktnkObQukdA/edit#gid=487713447",target="_blank"),"!"]), 
                 html.Li(children = ["In Sheets, download the spreadsheet as a .tsv file:", html.P("(File > Download > Tab Separated Values (.tsv))", className="card-mono")]), 
-                html.Li(children = ["Use the ", html.B("Upload .tsv"), " button to warp your reviews to the Matrix!"]), 
+                html.Li(children = ["Use the ", html.B("Upload ratings (.tsv)"), " button to warp your reviews to the Matrix!"]), 
 
             ]
         ),
@@ -99,12 +103,61 @@ def drawSelectPane():
                         ]),
 
                         dbc.Col([
+                            # you'll have to make this a method b/c this is way too big
+                            html.H5("Enter the Matrix"),
+                            dbc.Button("Get Started!", id="open", n_clicks=0, className = "btn-light",
+                            style={             
+                                  'width': '100%',             
+                                  'height': '60px',             
+                                  #'lineHeight': '60px',             
+                                  #'borderWidth': '1px',             
+                                  #'borderStyle': 'dashed',             
+                                  #'borderRadius': '5px',             
+                                  #'textAlign': 'center',             
+                                  #'margin': '5px',
+                                  #'cursor': 'pointer',
+                            }),
+                            # add a "support CafeMatrix bar that knows how whether our server costs are paid for or not!
+                            dbc.Modal(
+                                [
+                                    dbc.ModalBody(drawModalStartupGuide()),
+                                    dbc.ModalFooter(
+                                        dbc.Button(
+                                            "Close", id="close", className="ms-auto btn-light", n_clicks=0
+                                        )
+                                    ),
+                                ],
+                                id="modal",
+                                size="lg",
+                                is_open=False,
+                            ),
+                        ]),
+
+                        dbc.Col([
                             html.H5("Update Matrix"),
+                            dbc.Button("Get rating template", href = "https://docs.google.com/spreadsheets/d/1qIiK-8SHgQ4qp5Nry18LhIE_MRTTrKplktnkObQukdA/edit#gid=487713447", className = "btn-light",
+                            style={             
+                                    'width': '100%',             
+                                    'height': '60px',             
+                                    'display': 'flex',             
+                                    'flexDirection': 'column',
+                                    'justifyContent': 'center',
+                                    'textAlign': 'center',             
+
+                                  #'lineHeight': '60px',             
+                                  #'borderWidth': '1px',             
+                                  #'borderStyle': 'dashed',             
+                                  #'borderRadius': '5px',             
+                                  #'textAlign': 'center',             
+                                  #'margin': '5px',
+                                  #'cursor': 'pointer',
+                            }),
+
                             dcc.Upload(         
                             id='upload-data',         
                             children=html.Div(
                                 [             
-                                    'Upload .tsv'
+                                    'Upload ratings (.tsv)'
                                 ]),         
                                 className = "btn btn-light",
                                 style={             
@@ -125,35 +178,7 @@ def drawSelectPane():
                         ]),
 
 
-                        dbc.Col([
-                            # you'll have to make this a method b/c this is way too big
-                            html.H5("Enter the Matrix"),
-                            dbc.Button("Get Started!", id="open", n_clicks=0, className = "btn-light",
-                            style={             
-                                  'width': '100%',             
-                                  'height': '60px',             
-                                  #'lineHeight': '60px',             
-                                  #'borderWidth': '1px',             
-                                  #'borderStyle': 'dashed',             
-                                  #'borderRadius': '5px',             
-                                  #'textAlign': 'center',             
-                                  #'margin': '5px',
-                                  #'cursor': 'pointer',
-                            }),
-                            dbc.Modal(
-                                [
-                                    dbc.ModalBody(drawModalStartupGuide()),
-                                    dbc.ModalFooter(
-                                        dbc.Button(
-                                            "Close", id="close", className="ms-auto btn-light", n_clicks=0
-                                        )
-                                    ),
-                                ],
-                                id="modal",
-                                size="lg",
-                                is_open=False,
-                            ),
-                        ])
+
                     ]),
 
                 ])),
@@ -215,11 +240,12 @@ def reparseGraphView(cameraView,ratingData):
     '''
     #print(ratingData)
     if ratingData is None:
-        raise PreventUpdate
+        fig = generateEmptyFigure("No Matrix found. Get started now!")
+        #raise PreventUpdate
     else:
         fig = generateMatrix(ratingData)
     views = {
-            "Default": {},
+            "Default": {'x': 1.35, 'y': 1.35, 'z': 2},
             "Value vs. Study": {'x': 2, 'y': 0, 'z': 0.1},
             "Study vs. Ambiance": {'x': 0.01, 'y': 2, 'z': 0},
             "Value vs. Ambiance": {'x': 0, 'y': 0.01, 'z': 2} 
@@ -258,33 +284,7 @@ def displayBarChart(clickData):
     fig = go.Figure() 
 
     if clickData == None:
-        #pretty blank figure
-        fig.update_layout(
-            paper_bgcolor=background,
-            plot_bgcolor=background,    
-            xaxis = dict(
-                visible=False,
-                showgrid=False,
-                gridcolor=background,
-                zerolinecolor=background),
-            yaxis = dict(
-                visible=False,
-                showgrid=False,
-                gridcolor=background,
-                zerolinecolor=background
-                ),
-            annotations = [
-                {
-                    "text": "Select a datapoint to view the sub-matrix",
-                    "xref": "paper",
-                    "yref": "paper",
-                    "showarrow": False,
-                    "font": {
-                        "size": 22
-                    }
-                }
-            ]
-        )
+        fig = generateEmptyFigure(msg = "Select a datapoint to view the sub-matrix.")
 
     elif clickData:
         indexData = clickData["points"][0]['customdata'][1]
