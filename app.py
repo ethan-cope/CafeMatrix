@@ -21,13 +21,6 @@ from genMatrix import generateMatrix, generateShopBarChart, generateEmptyFigure,
 defaultView = 'Default' # Global variable, but read-only so should be ok
 fig = px.scatter_3d()
 
-App = Dash(
-    __name__,
-    title="CafeMatrix",
-    # adding bootstrap
-    external_stylesheets=[dbc.themes.BOOTSTRAP]
-)
-
 colors = {
     'background': '#FFFDD1'
 }
@@ -191,24 +184,6 @@ def drawSelectPane():
         ])
     ])
 
-App.layout = html.Div([
-    dbc.Card(
-        dbc.CardBody([
-            dbc.Row([
-               dbc.Col([
-                   drawCafeMatrix()
-                ]),
-               dbc.Col([
-                   drawSelectPane(),
-                ]) 
-
-            ])
-        ])
-    ),
-
-    dcc.Store(id='user-ratings', storage_type='local'),
-])
-
 @callback(Output('user-ratings', 'data'),
           Input('upload-data', 'contents'),
           State('user-ratings', 'data'))
@@ -302,4 +277,37 @@ def toggle_modal(n1, n2, is_open):
         return not is_open
     return is_open
 
-App.run_server(debug=True, use_reloader=True)
+App = Dash(
+    __name__,
+    title="CafeMatrix",
+    # adding bootstrap
+    external_stylesheets=[dbc.themes.BOOTSTRAP]
+)
+
+server = App.server
+
+App.layout = html.Div([
+    dbc.Card(
+        dbc.CardBody([
+            dbc.Row([
+               dbc.Col([
+                   drawCafeMatrix()
+                ]),
+               dbc.Col([
+                   drawSelectPane(),
+                ]) 
+
+            ])
+        ])
+    ),
+
+    dcc.Store(id='user-ratings', storage_type='local'),
+])
+
+# uncomment for dev
+#App.run_server(debug=True, use_reloader=True)
+
+if __name__ == "__main__":
+    #App.run_server(debug=True,use_reloader=True)
+    App.run_server(port=5000, host='0.0.0.0',debug=True)
+
