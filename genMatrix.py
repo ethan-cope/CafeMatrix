@@ -296,44 +296,64 @@ def extractReviewsFromUploadedTSV(uploadedTSVData = ""):
 
     reviewsArr = []
 
+
     if uploadedTSVData:
 
         rIdx = -1 #initialized to -1.
         # it gets set to 0 when we detect the row starting with "Shop Name", which signals that every further row is a cafe review
+
         for line in uploadedTSVData:
 
-            if "Shop Name" in line.split('\t')[0]:
-                rIdx = 0
-                continue
-            elif (rIdx == -1):
-                continue
-            else:
-                try:
-                    rIdx += 1 # rIDx is the unique index of the review, NOT the cafe itself.
-                    # if we ever want to support multi-reviews, etc.
+            # I think this latching thing works ok. no idea though.
+            # now we're erroring with the index. I'll troubleshoot later 2/29/24
 
-                    lineArr=line.split('\t') 
-                    #print(lineArr)
-                    uniqueShopIdx = hash(lineArr[0]) % 100000000 # we hash the shop name, which will be compared for duplicate reviews of the same place if that's ever wanted to be supported.
-                    # this is for future database integration if that's ever desired
+            latchLine = True
+            if (rIdx == -1):
+                # if we haven't latched (rIdx == -1, search for LatchLine
+                for val in line.split('\t')[1:10]:
+                    if not val.isdigit():
+                        latchLine = False
+                # if we make it through this loop and LL is still true, it's our latch line.
+                if (latchLine == True):
+                    rIdx = 0
 
-                    #print("linelen = %s" % len(lineArr))
+            if rIdx != -1:
+                rIdx += 1 # rIDx is the unique index of the review, NOT the cafe itself.
+                # if we ever want to support multi-reviews, etc.
 
-                    r = ShopReview(rID = rIdx, shopIndex = uniqueShopIdx, shopName = lineArr[0], extraComments = lineArr[10] if len(lineArr) > 10 else "") 
-                    # If no comments, don't throw error (inline conditional)
+                lineArr=line.split('\t') 
+                #print(lineArr)
+                uniqueShopIdx = hash(lineArr[0]) % 100000000 # we hash the shop name, which will be compared for duplicate reviews of the same place if that's ever wanted to be supported.
+                # this is for future database integration if that's ever desired
 
-                    r.calcIndices(list(map(lambda val: returnValidIndexValue(val), lineArr[1:10])))
-                    # one-liner casts all of the values to ints, and makes values fall between correct values.
-                    reviewsArr.append(r.toDfElement())
-                    #change from review object to DF Element
+                #print("linelen = %s" % len(lineArr))
 
-                    #print(r)
-                except IndexError as e:
-                    print("%s\n Error generating indices for cafe. Continuing..." % (e))
-                except ValueError as e:
-                    print("%s\n Invalid Index: Continuing..." % (e))
+                r = ShopReview(rID = rIdx, shopIndex = uniqueShopIdx, shopName = lineArr[0], extraComments = lineArr[10] if len(lineArr) > 10 else "") 
+                # If no comments, don't throw error (inline conditional)
+
+                # one-liner casts all of the values to ints, and makes values fall between correct values.
+
+                r.calcIndices(sanitizeRatingList(lineArr[1:10]))
+
+                reviewsArr.append(r.toDfElement())
+                #change from review object to DF Element
+
+                #print(r)
+
+#               except IndexError as e:
+#                   print("%s\n Error generating indices for cafe. Continuing..." % (e))
+#               except ValueError as e:
+#                   print("%s\n Invalid Index: Continuing..." % (e))
 
     return reviewsArr
+
+def sanitizeRatingList(rawValues):
+    ratingList = (list(map(lambda val: returnValidIndexValue(val), rawValues)))
+    while(len(ratingList) < 9):
+        ratingList.append(0)
+
+    return ratingList
+
 
 def returnValidIndexValue(rawVal):
     """

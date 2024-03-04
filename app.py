@@ -290,7 +290,7 @@ def drawSelectPane():
                                 # of course, actually trying to use multiple files breaks the program
                                 # but I already wrote it to use the multiple option
                                 # TODO:: change this it make multiple false.
-                                multiple=True
+                                multiple=False
                             ),     
 
                         ]),
@@ -312,16 +312,19 @@ def drawSelectPane():
 @callback(Output('user-ratings', 'data'),
           Input('upload-data', 'contents'),
           State('user-ratings', 'data'))
-def update_output(list_of_contents, stored_data):
+def update_output(contentData, stored_data):
     """
     This callback is triggered if the user uploads new data through the dialog boxes.
     """
-    if list_of_contents is None:
+    if contentData is None:
         raise PreventUpdate
 
-    contentData = list_of_contents[0].split(',')[1]
-    dataString = base64.b64decode(contentData).decode('ascii').strip()
+    # octet stream decoding seems to work fine on linux and windows...
+
+    contentData = contentData.split(',')[1]
     # dataString is the TSV file as a string
+    dataString = base64.b64decode(contentData).decode('ascii').strip()
+    # dataString = base64.b64decode(contentData).decode('utf-8').strip()
     dataArray=dataString.split('\n')
 
     return extractReviewsFromUploadedTSV(dataArray)
@@ -339,10 +342,14 @@ def reparseGraphView(cameraView,ratingData):
     Maybe this can be split into two callbacks which determine if the graph needs to be reparsed or not?
     '''
     #print(ratingData)
-    if ratingData is None:
-        fig = generateEmptyFigure("No Matrix found. Get started now!")
+    if ratingData is None or not ratingData:
+        fig = generateEmptyFigure("Error parsing rating data.")
+        #raise Exception(str(ratingData))
         #raise PreventUpdate
     else:
+        #print(ratingData)
+        #raise Exception(str(ratingData))
+
         fig = generateMatrix(ratingData)
     views = {
             "Default": {'x': 1.35, 'y': 1.35, 'z': 2},
