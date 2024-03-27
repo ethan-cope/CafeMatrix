@@ -37,8 +37,8 @@ def drawCafeMatrix():
             html.Div([dcc.Graph(
                 figure=fig, 
                 id='big-matrix',
-                style={'width':'90vh',
-                       'height':'90vh',
+                style={
+                       'height': '90vh',
                        'cursor':'pointer',
                        }
                 ),
@@ -46,6 +46,25 @@ def drawCafeMatrix():
             ])
         ])
     ])
+
+def drawSubMatrix():
+    return dbc.Col([
+            dbc.Offcanvas([
+                    dcc.Graph(
+                        id='breakdown-graph',
+                        style={
+                            'max-width':'90vw',
+                            'height':'85vh'
+                            }
+                    ),
+                ],
+                id="subMatrixCanvas",
+                is_open=False,
+                style={'min-width':'55vw'}
+            )
+        ])
+
+
 
 def drawModalStartupGuide():
     return [
@@ -200,10 +219,9 @@ def drawSelectPane():
             html.Div([
                 dbc.Card(
                 dbc.CardBody([
-                    dbc.Row([
+                    dbc.Col([
 
-                        dbc.Col([
-
+                        dbc.Row([
                             html.H5("View Options"),
                             dcc.RadioItems(
                                 ['Default', 'Value vs. Study','Study vs. Ambiance','Value vs. Ambiance'],
@@ -212,9 +230,11 @@ def drawSelectPane():
                                 labelStyle={'marginTop':'5px',
                                             'cursor': 'pointer',}
                             ),
-                        ]),
+                        ],
+                        className=".order-sm-1",
+                        ),
 
-                        dbc.Col([
+                        dbc.Row([
                             html.H5("Enter the Matrix"),
                             dbc.Button("Get Started!", id="openStartupGuide", n_clicks=0, className = "btn-light",
                             style={             
@@ -257,9 +277,11 @@ def drawSelectPane():
                                 is_open=False,
                             ),
 
-                        ]),
+                        ],
+                        className=".order-sm-4",
+                        ),
 
-                        dbc.Col([
+                        dbc.Row([
                             html.H5("Update Matrix"),
                             dbc.Button("Get rating template", href = "https://docs.google.com/spreadsheets/d/1qIiK-8SHgQ4qp5Nry18LhIE_MRTTrKplktnkObQukdA/copy", className = "btn-light",
                             style={             
@@ -293,21 +315,17 @@ def drawSelectPane():
                                 multiple=False
                             ),     
 
-                        ]),
-
-
+                        ],
+                        className=".order-sm-12",
+                        ),
 
                     ]),
-
                 ])),
-
-                dcc.Graph(
-                    id='breakdown-graph',
-                    style={'width':'90vh','height':'74vh'}
-                )
             ])
         ])
-    ])
+    ],
+    #style={'width': '20vw'}
+    )
 
 @callback(Output('user-ratings', 'data'),
           Input('upload-data', 'contents'),
@@ -382,13 +400,16 @@ def reparseGraphView(cameraView,ratingData):
 # hopefully minimal implications for performance / build minutes
 @callback(
     Output('breakdown-graph', 'figure'),
-    Input('big-matrix', 'clickData')
+    Output('subMatrixCanvas','is_open'),
+    Input('big-matrix', 'clickData'),
+    [State('subMatrixCanvas','is_open')],
 )
-def displayBarChart(clickData):
+def displayBarChart(clickData, is_open):
     '''
     This callback generates the bar chart for the matrix the user clicks on.
     '''
     fig = go.Figure() 
+    openStat = False
 
     if clickData == None:
         fig = generateEmptyFigure(msg = "Select a datapoint to view the sub-matrix.")
@@ -397,7 +418,9 @@ def displayBarChart(clickData):
         indexData = clickData["points"][0]['customdata'][1]
         shopName = (clickData["points"][0]['text'])
         fig = generateShopBarChart(indexData, shopName)
-    return fig
+        openStat = not is_open
+
+    return fig, openStat
 
 # this callback opens the startup modal
 @callback(
@@ -431,20 +454,23 @@ App = Dash(
 server = App.server
 
 App.layout = html.Div([
+    drawSubMatrix(),
     dbc.Card(
         dbc.CardBody([
             dbc.Row([
-               dbc.Col([
-                   drawCafeMatrix()
-                ]),
-               dbc.Col([
+                dbc.Col([
                    drawSelectPane(),
-                ]) 
-
+                ],
+                className="col-lg-3"
+                ),
+                dbc.Col([
+                    drawCafeMatrix()
+                ],
+                className="col-lg-9"
+                )
             ])
         ])
     ),
-
     dcc.Store(id='user-ratings', storage_type='local'),
 ])
 
