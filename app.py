@@ -33,12 +33,12 @@ def drawCafeMatrix():
     '''
     return dbc.Card([
         dbc.CardBody([
-            html.H4("Cafe Matrix", className="card-title card-mono"),
+            #html.H4("Cafe Matrix", className="card-title card-mono"),
             html.Div([dcc.Graph(
                 figure=fig, 
                 id='big-matrix',
                 style={
-                       'height': '90vh',
+                       'height': '93vh',
                        'cursor':'pointer',
                        }
                 ),
@@ -48,21 +48,27 @@ def drawCafeMatrix():
     ])
 
 def drawSubMatrix():
-    return dbc.Col([
-            dbc.Offcanvas([
-                    dcc.Graph(
-                        id='breakdown-graph',
-                        style={
-                            'max-width':'90vw',
-                            'height':'85vh'
-                            }
-                    ),
-                ],
-                id="subMatrixCanvas",
-                is_open=False,
-                style={'min-width':'55vw'}
-            )
-        ])
+    return dbc.Offcanvas([
+            dbc.Col([
+                dbc.Row([
+                    #dbc.Card([
+                        #dbc.CardBody([
+                            dcc.Graph(
+                                id='breakdown-graph',
+                                style={
+                                    'max-width':'90vw',
+                                    'height':'65vh'
+                                    }
+                            ),
+                        #])
+                    #])
+                ])
+            ])
+        ],
+        id="subMatrixCanvas",
+        is_open=False,
+        style={'min-width':'55vw'}
+    )
 
 
 
@@ -215,7 +221,7 @@ def drawSelectPane():
     '''
     return dbc.Card([
         dbc.CardBody([
-            html.H4("Matrix Options", className="card-title card-mono"),
+            html.H4("Cafe Matrix", className="card-title card-mono"),
             html.Div([
                 dbc.Card(
                 dbc.CardBody([
