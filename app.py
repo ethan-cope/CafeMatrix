@@ -38,6 +38,7 @@ def drawCafeMatrix():
                 figure=fig, 
                 id='big-matrix',
                 style={
+                       'minWidth': '55vw',
                        'height': '93vh',
                        'cursor':'pointer',
                        }
@@ -459,26 +460,27 @@ App = Dash(
 
 server = App.server
 
-App.layout = html.Div([
-    drawSubMatrix(),
-    dbc.Card(
-        dbc.CardBody([
-            dbc.Row([
-                dbc.Col([
-                   drawSelectPane(),
-                ],
-                className="col-lg-3"
-                ),
-                dbc.Col([
-                    drawCafeMatrix()
-                ],
-                className="col-lg-9"
-                )
+App.layout = dbc.Container([
+    #html.Div([
+        drawSubMatrix(),
+        dbc.Card(
+            dbc.CardBody([
+                dbc.Row([
+                    dbc.Col([
+                       drawSelectPane(),
+                    ],
+                    className="col-md-3"
+                    ),
+                    dbc.Col([
+                        drawCafeMatrix()
+                    ],
+                    className="col-md-9"
+                    )
+                ])
             ])
-        ])
-    ),
-    dcc.Store(id='user-ratings', storage_type='local'),
-])
+        ),
+    dcc.Store(id='user-ratings', storage_type='local')
+], fluid=True)
 
 # uncomment for dev
 #App.run_server(debug=True, use_reloader=True)
