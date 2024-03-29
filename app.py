@@ -38,7 +38,7 @@ def drawCafeMatrix():
                 figure=fig, 
                 id='big-matrix',
                 style={
-                       'minWidth': '55vw',
+                       'minWidth': '75',
                        'height': '93vh',
                        'cursor':'pointer',
                        }
