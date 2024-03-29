@@ -38,13 +38,14 @@ def drawCafeMatrix():
                 figure=fig, 
                 id='big-matrix',
                 style={
-                       'minWidth': '75',
+                       'minWidth': '65vw',
                        'height': '93vh',
                        'cursor':'pointer',
                        }
                 ),
 
-            ])
+            ], style={'minWidth': '65vw'})
+                       
         ])
     ])
 
@@ -57,18 +58,20 @@ def drawSubMatrix():
                             dcc.Graph(
                                 id='breakdown-graph',
                                 style={
-                                    'max-width':'90vw',
                                     'height':'65vh'
                                     }
                             ),
                         #])
                     #])
                 ])
-            ])
+            ]
+                    #,style={'max-width':'90vw',
+                    # 'min-width':'75vw',}
+            )
         ],
         id="subMatrixCanvas",
         is_open=False,
-        style={'min-width':'55vw'}
+        style={'min-width':'75vw'}
     )
 
 
