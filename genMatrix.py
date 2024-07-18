@@ -202,7 +202,7 @@ def generateShopBarChart(indexData, shopName):
         #fig.update_traces(hovertemplate="<b>%{text}</b><br>Ambiance Index: %{x}<br>Value Index: %{y}<br>Study Suitability Index: %{z}<br>%{customdata[0]}")
 
     fig.update_yaxes(range=[0,10])
-    fig.update_traces(marker_line_color = 'black', 
+    fig.update_traces(marker_line5_color = 'black', 
                       marker_line_width = 2, 
                       opacity = .55,
                       hovertemplate="<b>%{text}: %{customdata[0]} / 4</b><br>Weighting: %{customdata[1]}%<br>of total index "
@@ -229,14 +229,26 @@ def generateMatrix(reviewsArray):
                          custom_data=['extraComments', 'subIndexData'],
                          )
 
-    fig.update_layout(scene = dict(
-        xaxis = dict(range = [10,0]),
-        xaxis_title='Ambiance Index',
-        yaxis = dict(range = [0,10]),
-        yaxis_title='Value Index',
-        zaxis = dict(range = [0,10]),
-        zaxis_title='Study Suitability Index',
-        ))
+    fig.update_layout(
+        scene = dict(
+            xaxis = dict(range = [10,0]),
+            xaxis_title='Ambiance Index',
+            yaxis = dict(range = [0,10]),
+            yaxis_title='Value Index',
+            zaxis = dict(range = [0,10]),
+            zaxis_title='Study Suitability Index',
+        )
+    )
+    #fig.update_coloraxes(colorbar={'thickness':10})
+    fig.update_coloraxes(colorbar={'orientation':'h','thickness':10})
+    fig.update_layout(
+        margin = dict(
+            l=5,
+            r=5,
+            t=5,
+            b=5,
+        )
+    )
 
     # making hover look pretty 
     fig.update_traces(hovertemplate="<b>%{text}</b><br>Ambiance Index: %{x}<br>Value Index: %{y}<br>Study Suitability Index: %{z}<br>%{customdata[0]}")
