@@ -202,7 +202,7 @@ def generateShopBarChart(indexData, shopName):
         #fig.update_traces(hovertemplate="<b>%{text}</b><br>Ambiance Index: %{x}<br>Value Index: %{y}<br>Study Suitability Index: %{z}<br>%{customdata[0]}")
 
     fig.update_yaxes(range=[0,10])
-    fig.update_traces(marker_line5_color = 'black', 
+    fig.update_traces(marker_line_color = 'black', 
                       marker_line_width = 2, 
                       opacity = .55,
                       hovertemplate="<b>%{text}: %{customdata[0]} / 4</b><br>Weighting: %{customdata[1]}%<br>of total index "
