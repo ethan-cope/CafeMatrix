@@ -39,7 +39,7 @@ def drawCafeMatrix():
                         id='big-matrix',
                         style={
                             #'minWidth': '65vw',
-                            #'height': '93vh',
+                            #'maxheight': '100vh',
                             #'width': '93 vw',
                             #'minheight': '80 vh',
                             'cursor':'pointer',
@@ -48,19 +48,30 @@ def drawCafeMatrix():
 
                     ],  className="ratio", 
                              #style={'minHeight': '80vh'}
-                            style={'--bs-aspect-ratio': '130%'}
+                             style={'--bs-aspect-ratio': '130%', 'max-height' : '73vh'}
                     )
                    ]),
 
                 dbc.Row([
-                    html.H5("View Options"),
-                    dcc.RadioItems(
-                        ['Default', 'Value vs. Study','Study vs. Ambiance','Value vs. Ambiance'],
-                        'Default',
-                        id='axesSelectOption',
-                        labelStyle={'marginTop':'5px',
-                                    'cursor': 'pointer',}
-                    ),
+                    dbc.Col([
+                        dbc.Card([
+                            dbc.CardBody([
+                                html.H5("View Options", className="card-mono"),
+                                html.Div([
+                                    dbc.RadioItems(
+                                        ['Default', 'Value vs. Study','Study vs. Ambiance','Value vs. Ambiance'],
+                                        'Default',
+                                        inline=True,
+                                        id='axesSelectOption',
+                                        labelStyle={'marginTop':'5px',
+                                                    'cursor': 'pointer',}
+                                    )
+                                    ],
+                                    style={"gap":"10px"},
+                                ),
+                            ])
+                        ])
+                    ])
                 ],
                 className=".order-sm-1",
                 ),
@@ -93,111 +104,72 @@ def drawSubMatrix():
 
 
 
-def drawSelectPane():       
+def drawIntroTipsModal():       
     '''
-    This spits out a bootstrap card with the matrix options and the sub-matrix bar chart.
+    This spits out 2 invisible guides on how to use the CafeMatrix.
     It's only called on page reload.
     '''
-    return dbc.Card([
-        dbc.CardBody([
-            html.H4("Cafe Matrix", className="card-title card-mono"),
-            html.Div([
-                dbc.Card(
-                dbc.CardBody([
-                    dbc.Col([
+    return html.Div([
+        dbc.Modal(
+            [
+                dbc.ModalBody(drawModalStartupGuide()),
+                dbc.ModalFooter(
+                    dbc.Button(
+                        "Close", id="closeStartup", className="ms-auto btn-light", n_clicks=0
+                    )
+                ),
+            ],
+            id="modalStartup",
+            size="lg",
+            is_open=False,
+        ),
 
-                        dbc.Row([
-                            html.H5("Enter the Matrix"),
-                            dbc.Button("Get Started!", id="openStartupGuide", n_clicks=0, className = "btn-light",
-                            style={             
-                                  'width': '100%',             
-                                  'height': '60px',             
-                            }),
-                            # add a "support CafeMatrix bar that knows how whether our server costs are paid for or not!
+        dbc.Modal(
+            [
+                dbc.ModalBody(drawModalTipsGuide()),
+                dbc.ModalFooter(
+                    dbc.Button(
+                        "Close", id="closeTips", className="ms-auto btn-light", n_clicks=0
+                    )
+                ),
+            ],
+            id="modalTips",
+            size="lg",
+            is_open=False,
+        ),
+    ])
 
-                            dbc.Button("Matrix Tips", id="openTipsGuide", n_clicks=0, className = "btn-light",
-                            style={             
-                                  'width': '100%',             
-                                  'height': '60px',             
-                            }),
-
-                            dbc.Modal(
-                                [
-                                    dbc.ModalBody(drawModalStartupGuide()),
-                                    dbc.ModalFooter(
-                                        dbc.Button(
-                                            "Close", id="closeStartup", className="ms-auto btn-light", n_clicks=0
-                                        )
-                                    ),
-                                ],
-                                id="modalStartup",
-                                size="lg",
-                                is_open=False,
-                            ),
-
-                            dbc.Modal(
-                                [
-                                    dbc.ModalBody(drawModalTipsGuide()),
-                                    dbc.ModalFooter(
-                                        dbc.Button(
-                                            "Close", id="closeTips", className="ms-auto btn-light", n_clicks=0
-                                        )
-                                    ),
-                                ],
-                                id="modalTips",
-                                size="lg",
-                                is_open=False,
-                            ),
-
-                        ],
-                        className=".order-sm-4",
-                        ),
-
-                        dbc.Row([
-                            html.H5("Update Matrix"),
-                            dbc.Button("Get rating template", href = "https://docs.google.com/spreadsheets/d/1qIiK-8SHgQ4qp5Nry18LhIE_MRTTrKplktnkObQukdA/copy", className = "btn-light",
-                            style={             
-                                    'width': '100%',             
-                                    'height': '60px',             
-                                    'display': 'flex',             
-                                    'flexDirection': 'column',
-                                    'justifyContent': 'center',
-                                    'textAlign': 'center',             
-                            }),
-
-                            dcc.Upload(         
+def drawNavBar():
+    return dbc.NavbarSimple(
+        children = [
+            dbc.NavItem(dbc.NavLink("Start!", id="openStartupGuide", n_clicks=0, style={"cursor":"pointer"})),
+            dbc.NavItem(dbc.NavLink("Tips", id="openTipsGuide", n_clicks=0, style={"cursor":"pointer"})),
+            dbc.DropdownMenu(
+                children=[
+                    dbc.DropdownMenuItem(dbc.NavLink("Get Rating Template", href="https://docs.google.com/spreadsheets/d/1qIiK-8SHgQ4qp5Nry18LhIE_MRTTrKplktnkObQukdA/copy", style={"cursor":"pointer"})),
+                    dbc.DropdownMenuItem(
+                        dcc.Upload(         
                             id='upload-data',         
-                            children=html.Div(
-                                [             
-                                    'Upload ratings (.tsv)'
-                                ]),         
-                                className = "btn btn-light",
-                                style={             
-                                    'width': '100%',             
-                                    'height': '60px',             
-                                    'display': 'flex',             
-                                    'flexDirection': 'column',
-                                    'justifyContent': 'center',
-                                    'textAlign': 'center',             
-                                },
-                                # Allow multiple files to be uploaded         
-                                # of course, actually trying to use multiple files breaks the program
-                                # but I already wrote it to use the multiple option
-                                # TODO:: change this it make multiple false.
-                                multiple=False
-                            ),     
+                            multiple=False,
+                            children=html.Div([             
+                                'Upload ratings (.tsv)'
+                            ])         
+                        ),     
+                    ),
+                ],
+                className="dropdown-menu-end",
+                nav = True,
+                in_navbar=True,
+                label="Update"
+            )
 
-                        ],
-                        className=".order-sm-12",
-                        ),
 
-                    ]),
-                ])),
-            ])
-        ])
-    ],
-    #style={'width': '20vw'}
+
+        ],
+        brand = "CafeMatrix",
+        className = "card-mono"
     )
+ 
 
 @callback(Output('user-ratings', 'data'),
           Input('upload-data', 'contents'),
@@ -325,17 +297,15 @@ App = Dash(
 
 server = App.server
 
-App.layout = dbc.Container([
-    #html.Div([
+App.layout = html.Div([
+    drawNavBar(),
+    dbc.Container([
         drawSubMatrix(),
-        #dbc.Card(
-        #dbc.CardBody([
-                drawCafeMatrix(),
-                drawSelectPane(),
-                #])
-        #),
-    dcc.Store(id='user-ratings', storage_type='local')
-], fluid=True)
+        drawCafeMatrix(),
+        drawIntroTipsModal(),
+        dcc.Store(id='user-ratings', storage_type='local')
+    ], fluid=True)
+])
 
 # uncomment for dev
 #App.run_server(debug=True, use_reloader=True)
