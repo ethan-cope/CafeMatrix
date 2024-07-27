@@ -235,10 +235,10 @@ def reparseGraphView(cameraView,ratingData):
 
         fig = generateMatrix(ratingData)
     views = {
-            "Default": {'x': 1.35, 'y': 1.35, 'z': 2},
-            "Value vs. Study": {'x': 2, 'y': 0, 'z': 0.1},
-            "Study vs. Ambiance": {'x': 0.01, 'y': 2, 'z': 0},
-            "Value vs. Ambiance": {'x': 0, 'y': 0.01, 'z': 2} 
+            "Default": {'x': 1.4, 'y': 1.4, 'z': 2.2},
+            "Value vs. Study": {'x': 2.1, 'y': 0, 'z': 0.1},
+            "Study vs. Ambiance": {'x': 0.01, 'y': 2.1, 'z': 0},
+            "Value vs. Ambiance": {'x': 0, 'y': 0.01, 'z': 2.1} 
     }
 
     scenes = {
