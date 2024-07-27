@@ -143,10 +143,21 @@ def drawNavBar():
     return dbc.NavbarSimple(
         children = [
             dbc.NavItem(dbc.NavLink("Start!", id="openStartupGuide", n_clicks=0, style={"cursor":"pointer"})),
-            dbc.NavItem(dbc.NavLink("Tips", id="openTipsGuide", n_clicks=0, style={"cursor":"pointer"})),
             dbc.DropdownMenu(
                 children=[
-                    dbc.DropdownMenuItem(dbc.NavLink("Get Rating Template", href="https://docs.google.com/spreadsheets/d/1qIiK-8SHgQ4qp5Nry18LhIE_MRTTrKplktnkObQukdA/copy", style={"cursor":"pointer"})),
+                    #dbc.DropdownMenuItem(
+                    #    dbc.NavLink("Get Rating Template", href="https://docs.google.com/spreadsheets/d/1qIiK-8SHgQ4qp5Nry18LhIE_MRTTrKplktnkObQukdA/copy", style={"cursor":"pointer"})
+                    #    ),
+
+                    dbc.DropdownMenuItem([
+                        dcc.Download(
+                            id="downloadTSV", 
+                        ),
+                        html.Div(["Get Rating Template"], id="downloadTSVButton"),
+                        #dbc.NavLink("Get Rating Template", id="downloadTSV", style={"cursor":"pointer"})
+                    ]),
+#html.A("Get Rating Template", href="/CafeMatrixTemplate.tsv", download="CafeMatrixTemplate")
+
                     dbc.DropdownMenuItem(
                         dcc.Upload(         
                             id='upload-data',         
@@ -161,13 +172,23 @@ def drawNavBar():
                 nav = True,
                 in_navbar=True,
                 label="Update"
-            )
-
-
+            ),
+            dbc.NavItem(dbc.NavLink("Tips", id="openTipsGuide", n_clicks=0, style={"cursor":"pointer"})),
 
         ],
         brand = "CafeMatrix",
         className = "card-mono"
+    )
+
+
+@callback(
+    Output("downloadTSV", "data"),
+    Input("downloadTSVButton", "n_clicks"),
+    prevent_initial_call=True,
+)
+def func(n_clicks):
+    return dcc.send_file(
+        "./CafeMatrixTemplate.tsv"
     )
  
 
