@@ -331,26 +331,10 @@ def extractReviewsFromUploadedTSV(uploadedTSVData = ""):
 
             if rIdx != -1:
                 rIdx += 1 # rIDx is the unique index of the review, NOT the cafe itself.
-                # if we ever want to support multi-reviews, etc.
+                # if we ever want to support multiple reviews of the same restaurant, etc.
 
-                lineArr=line.split('\t') 
-                #print(lineArr)
-                uniqueShopIdx = hash(lineArr[0]) % 100000000 # we hash the shop name, which will be compared for duplicate reviews of the same place if that's ever wanted to be supported.
-                # this is for future database integration if that's ever desired
-
-                #print("linelen = %s" % len(lineArr))
-
-                r = ShopReview(rID = rIdx, shopIndex = uniqueShopIdx, shopName = lineArr[0], extraComments = lineArr[10] if len(lineArr) > 10 else "") 
-                # If no comments, don't throw error (inline conditional)
-
-                # one-liner casts all of the values to ints, and makes values fall between correct values.
-
-                r.calcIndices(sanitizeRatingList(lineArr[1:10]))
-
-                reviewsArr.append(r.toDfElement())
-                #change from review object to DF Element
-
-                #print(r)
+                # parse TSV line into a Df, and add it to the dictionary
+                reviewsArr.append(extractDfElementFromTSVString(rIdx,line))
 
 #               except IndexError as e:
 #                   print("%s\n Error generating indices for cafe. Continuing..." % (e))
@@ -358,6 +342,22 @@ def extractReviewsFromUploadedTSV(uploadedTSVData = ""):
 #                   print("%s\n Invalid Index: Continuing..." % (e))
 
     return reviewsArr
+
+def extractDfElementFromTSVString(rIdx, TSVLine):
+    lineArr=TSVLine.split('\t') 
+    # hash the shop name, which will be compared for duplicate reviews of the same place if that's ever a feature to add
+    # could be a good thing for future database integration
+    # note this this doesn't work... return later?
+    uniqueShopIdx = hash(lineArr[0]) % 100000000 
+
+    # initialize ShopReview object from the line
+    r = ShopReview(rID = rIdx, shopIndex = uniqueShopIdx, shopName = lineArr[0], extraComments = lineArr[10] if len(lineArr) > 10 else "") 
+    # If no comments, don't throw error (inline conditional)
+
+    # calculate index information
+    r.calcIndices(sanitizeRatingList(lineArr[1:10]))
+    return r.toDfElement()
+
 
 def sanitizeRatingList(rawValues):
     ratingList = (list(map(lambda val: returnValidIndexValue(val), rawValues)))
@@ -398,16 +398,8 @@ def extractReviewsFromLocalTSV(localTSVPath = ""):
                 continue
             else:
                 rIdx += 1 # rIDx is the unique index of the review.
-
-                lineArr=line.split('\t') 
-                uniqueShopIdx = hash(lineArr[0]) % 100000000 # we hash the shop name, which will be compared for duplicate reviews of the same place.
-                r = ShopReview(rID = rIdx, shopIndex = uniqueShopIdx, shopName = lineArr[0], extraComments = lineArr[10]) 
-                # one-liner casts all of the values to ints.
-                r.calcIndices(list(map(lambda val: int(val), lineArr[1:10])))
-                reviewsArr.append(r.toDfElement())
-                #change from review object to DF Element
-                #print(r)
-
+                reviewsArr.append(extractDfElementFromTSVString(rIdx,line))
+                
     return reviewsArr
 
 # this block generates a bunch of random reviews for testing purposes.

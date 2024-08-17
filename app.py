@@ -6,7 +6,7 @@ import dash_bootstrap_components as dbc
 import plotly.express as px      
 import plotly.graph_objects as go
 import base64
-from genMatrix import generateMatrix, generateShopBarChart, generateEmptyFigure, extractReviewsFromLocalTSV, extractReviewsFromUploadedTSV
+from genMatrix import generateMatrix, generateShopBarChart, generateEmptyFigure, extractReviewsFromLocalTSV, extractReviewsFromUploadedTSV, extractDfElementFromTSVString
 from guides import drawModalStartupGuide, drawModalTipsGuide
 
 # import json
@@ -157,6 +157,10 @@ def drawNavBar():
                         #dbc.NavLink("Get Rating Template", id="downloadTSV", style={"cursor":"pointer"})
                     ]),
 #html.A("Get Rating Template", href="/CafeMatrixTemplate.tsv", download="CafeMatrixTemplate")
+                    dbc.DropdownMenuItem([
+                        html.Div(["Add a Cafe Review"], id="addReviewButton"),
+                        #dbc.NavLink("Get Rating Template", id="downloadTSV", style={"cursor":"pointer"})
+                    ]),
 
                     dbc.DropdownMenuItem(
                         dcc.Upload(         
@@ -190,29 +194,91 @@ def func(n_clicks):
     return dcc.send_file(
         "./CafeMatrixTemplate.tsv"
     )
- 
+
+
+#@callback(Output('user-ratings', 'data'),
+#          Input("addReviewButton", "n_clicks"),
+#          State('user-ratings', 'data'))
+#def update_cache_data_from_single_review(contentData, stored_data):
+#    """
+#    This callback is triggered if the user uploads new data through the dialog boxes.
+#    """
+#    if contentData is None:
+#        raise PreventUpdate
+#
+#    # octet stream decoding seems to work fine on linux and windows...
+#    print(stored_data[0])
+#
+#    """
+#    contentData = contentData.split(',')[1]
+#    # dataString is the TSV file as a string
+#    dataString = base64.b64decode(contentData).decode('ascii').strip()
+#    # dataString = base64.b64decode(contentData).decode('utf-8').strip()
+#    dataArray=dataString.split('\n')
+#
+#    """
+#    #return extractReviewsFromUploadedTSV(dataArray)
+
+
 
 @callback(Output('user-ratings', 'data'),
+          Input("addReviewButton", "n_clicks"),
           Input('upload-data', 'contents'),
           State('user-ratings', 'data'))
-def update_output(contentData, stored_data):
+def update_cache_data(nclicks, contentData, stored_data):
     """
-    This callback is triggered if the user uploads new data through the dialog boxes.
+    This callback is triggered if the user uploads new data through the dialog boxes or they upload their own review
     """
-    if contentData is None:
+
+
+    ## VERY BIG TODO: this is stateless but contentData and nclicks are consistent across sessions so we can't know which one to execute (doesn't flush)
+    if contentData is None and nclicks is None:
+        # 2 ways to trigger callback - if both were a mistake then do this
         raise PreventUpdate
 
-    # octet stream decoding seems to work fine on linux and windows...
+    elif contentData is not None:
+        # if the callback was triggered by the upload button
 
-    contentData = contentData.split(',')[1]
-    # dataString is the TSV file as a string
-    dataString = base64.b64decode(contentData).decode('ascii').strip()
-    # dataString = base64.b64decode(contentData).decode('utf-8').strip()
-    dataArray=dataString.split('\n')
+        # octet stream decoding seems to work fine on linux and windows...
+        contentData = contentData.split(',')[1]
+        # dataString is the TSV file as a string
+        dataString = base64.b64decode(contentData).decode('ascii').strip()
+        # dataString = base64.b64decode(contentData).decode('utf-8').strip()
+        dataArray=dataString.split('\n')
 
-    return extractReviewsFromUploadedTSV(dataArray)
+        return extractReviewsFromUploadedTSV(dataArray)
 
-# tried to make this client-side but it's hard to do. best to keep this combined for now.
+    elif nclicks is not None:
+        # if the callback was triggered by the user-review button
+        print(nclicks)
+
+        # take stored data
+        localReviewData = stored_data
+        # calculate ID of new review
+        rIdx = localReviewData[-1]["rID"] + 1
+
+        line = "Ding Tea	5	5	2	3	4	4	4	4	5	Somewhat loud local study spot. Couches for groups of 4.	"
+
+        reviewDfElement = extractDfElementFromTSVString(rIdx, line)
+
+        # if there's already a review in this 
+        for i in range(len(localReviewData)):
+            # if we have a duplicate review, replace the existing review
+            #print(localReviewData[i]["shopIndex"], " ---- ", reviewDfElement["shopIndex"])
+            if localReviewData[i]["shopName"] == reviewDfElement["shopName"]:
+                #print("replaced an existing review")
+                localReviewData[i] = reviewDfElement
+                #print(localReviewData)
+                return localReviewData
+        
+        localReviewData.append(reviewDfElement)
+
+        #print(localReviewData)
+        return localReviewData
+
+
+
+    # tried to make this client-side but it's hard to do. best to keep this combined for now.
 @callback(
     Output('big-matrix', 'figure'),
     Input('axesSelectOption', 'value'),
@@ -225,6 +291,7 @@ def reparseGraphView(cameraView,ratingData):
     Maybe this can be split into two callbacks which determine if the graph needs to be reparsed or not?
     '''
     #print(ratingData)
+
     if ratingData is None or not ratingData:
         fig = generateEmptyFigure("Error parsing rating data.")
         #raise Exception(str(ratingData))
