@@ -2,6 +2,111 @@ from dash import Dash, dcc, html, Input, Output, State, callback
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
+def drawModalAddReview():
+    return [
+        html.H3("Add a Review",className="card-mono"),
+        dbc.Col([
+            dbc.Row([
+                dbc.Card(
+                    dbc.CardBody([
+                        #html.H4("Cafe Name",className="card-mono"),
+                        dbc.InputGroup([
+                            dbc.InputGroupText("Cafe Name"),
+                            html.Br(),
+                            dbc.Input(id="cafeName", type="text", placeholder="Starbucks, etc.")
+                        ]),
+                        dbc.Textarea(placeholder="Brief thoughts / opinions..."),
+                        html.I("All ratings are from 1 (lowest) to 5 (higest)."),
+                        html.Br(),
+                        html.I("Tap a category for an explanation on how to use it!")
+                        #html.I("Tap the for more information")
+                    ])
+                )
+            ]),
+            dbc.Row([
+                dbc.Card(
+                    dbc.CardBody([
+                        html.H5("Ambiance Ratings",className="card-mono"),
+                        dbc.InputGroup([
+                            dbc.InputGroupText("Vibe", id="vibeTT"),
+                            dbc.Input(id="vibe", type="number", placeholder="3", style={"text-align":"right"})
+                        ]),
+                        dbc.InputGroup([
+                            dbc.InputGroupText("Seating", id="seatingTT"),
+                            dbc.Input(id="seating", type="number", placeholder="3", style={"text-align":"right"})
+                        ]),
+                        dbc.InputGroup([
+                            dbc.InputGroupText("Spark", id = "sparkTT"),
+                            dbc.Input(id="spark", type="number", placeholder="3", style={"text-align":"right"})
+                        ]),
+                    ])
+                ),
+                dbc.Tooltip("Is the decor / vibe good? From 1-5. ",target="vibeTT"),
+                dbc.Tooltip("Are seats easy to find and the cafe non-crowded? From 1-5. ",target="seatingTT"),
+                dbc.Tooltip("Anything special about this place? Nice baristas? tabletop games? Becomes a bar at night? Active part of community?  rank here, from 1-5.",target="sparkTT"),
+            ]),
+            dbc.Row([
+                dbc.Card(
+                    dbc.CardBody([
+                        html.H5("Value and Taste Ratings",className="card-mono"),
+                        dbc.InputGroup([
+                            dbc.InputGroupText("Taste", id="tasteTT"),
+                            dbc.Input(id="taste", type="number", placeholder="3", style={"text-align":"right"})
+                        ]),
+                        dbc.InputGroup([
+                            dbc.InputGroupText("Inexpensiveness", id="costTT"),
+                            dbc.Input(id="cost", type="number", placeholder="3", style={"text-align":"right"})
+                        ]),
+                        dbc.InputGroup([
+                            dbc.InputGroupText("Menu Options", id="menuTT"),
+                            dbc.Input(id="menu", type="number", placeholder="3", style={"text-align":"right"})
+                        ]),
+                    ])
+                ),
+                dbc.Tooltip("How good are the drinks here? From 1-5 ",target="tasteTT"),
+                dbc.Tooltip("How expensive are the drinks here? NOTE that 5 = least expensive, 1 = most expensive. From 1-5.",target="costTT"),
+                dbc.Tooltip("Do they have cool specials? Do they roast or sell their own beans? Good food / cocktails too? all that goes here. From 1-5.",target="menuTT"),
+
+            ]),
+            dbc.Row([
+                dbc.Card(
+                    dbc.CardBody([
+                        html.H5("Study Suitability Ratings",className="card-mono"),
+                        dbc.InputGroup([
+                            dbc.InputGroupText("Space", id="spaceTT"),
+                            dbc.Input(id="space", type="number", placeholder="3", style={"text-align":"right"})
+                        ]),
+                        dbc.InputGroup([
+                            dbc.InputGroupText("Tech", id="techTT"),
+                            dbc.Input(id="tech", type="number", placeholder="3", style={"text-align":"right"})
+                        ]),
+                        dbc.InputGroup([
+                            dbc.InputGroupText("Accessibility", id="accessTT"),
+                            dbc.Input(id="access", type="number", placeholder="3", style={"text-align":"right"})
+                        ]),
+                    ])
+                ),
+                dbc.Tooltip("How good is the space for studying? Big tables? Lots of room to spread out? From 1-5.",target="spaceTT"),
+                dbc.Tooltip("How fast is the internet here? Are there lots of charging outlets? From 1-5.",target="techTT"),
+                dbc.Tooltip("How long does it stay open? Is it easy to park at or get to? From 1-5.",target="accessTT"),
+
+
+            ])
+
+            #line = "Ding Tea	5	5	2	3	4	4	4	4	5	Somewhat loud local study spot. Couches for groups of 4.	"
+
+            # generate review
+
+            # invisible text box that becomes tab separated
+
+            # add a submit button
+        
+        ])
+    ]
+
+
+
+
 def drawModalStartupGuide():
     return [
         html.H4("Entering the Matrix",className="card-mono"),

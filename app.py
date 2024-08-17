@@ -7,7 +7,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import base64
 from genMatrix import generateMatrix, generateShopBarChart, generateEmptyFigure, extractReviewsFromLocalTSV, extractReviewsFromUploadedTSV, extractDfElementFromTSVString
-from guides import drawModalStartupGuide, drawModalTipsGuide
+from guides import drawModalStartupGuide, drawModalTipsGuide, drawModalAddReview
 
 # import json
 # import pandas as pd
@@ -102,12 +102,12 @@ def drawSubMatrix():
         style={'min-width':'75vw'}
     )
 
-
-
 def drawIntroTipsModal():       
     '''
     This spits out 2 invisible guides on how to use the CafeMatrix.
+    It also draws the modal that lets users enter a new review
     It's only called on page reload.
+    These are found in the modals file.
     '''
     return html.Div([
         dbc.Modal(
@@ -136,6 +136,23 @@ def drawIntroTipsModal():
             id="modalTips",
             size="lg",
             is_open=False,
+        ),
+
+        dbc.Modal(
+            [
+                dbc.ModalBody(drawModalAddReview()),
+                dbc.ModalFooter(dbc.ButtonGroup([
+                    dbc.Button(
+                        "Discard Review", id="closeAddReview", className="ms-auto btn-danger", n_clicks=0
+                    ),
+                    dbc.Button(
+                        "Add Review", id="addReviewBtn", className="ms-auto btn-success", n_clicks=0
+                    )
+                ])),
+            ],
+            id="modalAddReview",
+            size="lg",
+            is_open=True,
         ),
     ])
 
