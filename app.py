@@ -146,13 +146,13 @@ def drawIntroTipsModal():
                         "Discard Review", id="closeAddReview", className="ms-auto btn-danger", n_clicks=0
                     ),
                     dbc.Button(
-                        "Add Review", id="addReviewBtn", className="ms-auto btn-success", n_clicks=0
+                        "Add Review", id="addReviewButton", className="ms-auto btn-success", n_clicks=0
                     )
                 ])),
             ],
             id="modalAddReview",
             size="lg",
-            is_open=True,
+            is_open=False,
         ),
     ])
 
@@ -175,7 +175,7 @@ def drawNavBar():
                     ]),
 #html.A("Get Rating Template", href="/CafeMatrixTemplate.tsv", download="CafeMatrixTemplate")
                     dbc.DropdownMenuItem([
-                        html.Div(["Add a Cafe Review"], id="addReviewButton"),
+                        html.Div(["Add a Cafe Review"], id="openAddReviewButton"),
                         #dbc.NavLink("Get Rating Template", id="downloadTSV", style={"cursor":"pointer"})
                     ]),
 
@@ -237,19 +237,40 @@ def func(n_clicks):
 #    #return extractReviewsFromUploadedTSV(dataArray)
 
 
-
 @callback(Output('user-ratings', 'data'),
           Input("addReviewButton", "n_clicks"),
           Input('upload-data', 'contents'),
-          State('user-ratings', 'data'))
-def update_cache_data(nclicks, contentData, stored_data):
+          State('user-ratings', 'data'),
+
+          State("cafeName", "value"),
+          State("comments", "value"),
+
+          State("vibe", "value"),
+          State("seating", "value"),
+          State("spark", "value"),
+          
+          State("taste", "value"),
+          State("cost", "value"),
+          State("menu", "value"),
+
+          State("space", "value"),
+          State("tech", "value"),
+          State("access", "value"),
+          )
+def update_cache_data(nclicks, contentData, stored_data, 
+                      # the state indices
+                      cafeName, comments,
+                      vibe, seating, spark, 
+                      taste, cost, menu, 
+                      space, tech, access):
     """
     This callback is triggered if the user uploads new data through the dialog boxes or they upload their own review
     """
 
+    print(nclicks, cafeName, vibe, seating, spark, taste, cost, menu, space, tech, access, comments)
 
     ## VERY BIG TODO: this is stateless but contentData and nclicks are consistent across sessions so we can't know which one to execute (doesn't flush)
-    if contentData is None and nclicks is None:
+    if contentData is None and (nclicks is None or nclicks == 0):
         # 2 ways to trigger callback - if both were a mistake then do this
         raise PreventUpdate
 
@@ -265,33 +286,51 @@ def update_cache_data(nclicks, contentData, stored_data):
 
         return extractReviewsFromUploadedTSV(dataArray)
 
-    elif nclicks is not None:
-        # if the callback was triggered by the user-review button
-        print(nclicks)
+    elif nclicks != 0 and nclicks is not None:
+        # if the callback was triggered by the user adding a new review
 
         # take stored data
         localReviewData = stored_data
-        # calculate ID of new review
-        rIdx = localReviewData[-1]["rID"] + 1
 
-        line = "Ding Tea	5	5	2	3	4	4	4	4	5	Somewhat loud local study spot. Couches for groups of 4.	"
 
-        reviewDfElement = extractDfElementFromTSVString(rIdx, line)
+        # validate user input
+        if (cafeName is None):
 
-        # if there's already a review in this 
-        for i in range(len(localReviewData)):
-            # if we have a duplicate review, replace the existing review
-            #print(localReviewData[i]["shopIndex"], " ---- ", reviewDfElement["shopIndex"])
-            if localReviewData[i]["shopName"] == reviewDfElement["shopName"]:
-                #print("replaced an existing review")
-                localReviewData[i] = reviewDfElement
-                #print(localReviewData)
-                return localReviewData
-        
-        localReviewData.append(reviewDfElement)
+            # TODO: inline input sanitization with client-side callbacks
+            # note that the matrix will quietly coerce values that are outside the 1-5 boundaries to 1-5. it's a massive pain to introduce HTML form stuff since this is python instead of HTML.
+            print("you're dumb")
 
-        #print(localReviewData)
+        else:
+            # calculate ID of new review
+            rIdx = localReviewData[-1]["rID"] + 1
+
+            #line = "Ding Tea	5	5	2	3	4	4	4	4	5	Somewhat loud local study spot. Couches for groups of 4.	"
+            line = "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t" % (cafeName, vibe, seating, spark, taste, cost, menu, space, tech, access, comments)
+
+            reviewDfElement = extractDfElementFromTSVString(rIdx, line)
+
+            # if there's already a review in this 
+            for i in range(len(localReviewData)):
+                # if we have a duplicate review, replace the existing review
+                #print(localReviewData[i]["shopIndex"], " ---- ", reviewDfElement["shopIndex"])
+                if localReviewData[i]["shopName"] == reviewDfElement["shopName"]:
+                    print("replaced an existing review")
+                    localReviewData[i] = reviewDfElement
+                    #print(localReviewData)
+                    return localReviewData
+            
+            localReviewData.append(reviewDfElement)
+
+            #print(localReviewData)
+
+        #TODO TODO: close the modal here
+        #modalAddReview.close()
         return localReviewData
+
+    # to catch all other special cases I didn't think of
+    else:
+        raise PreventUpdate
+
 
 
 
@@ -377,7 +416,7 @@ def displayBarChart(clickData, is_open):
     [Input("openStartupGuide", "n_clicks"), Input("closeStartup", "n_clicks")],
     [State("modalStartup", "is_open")],
 )
-def toggle_modal(n1, n2, is_open):
+def toggle_startup_modal(n1, n2, is_open):
     if n1 or n2:
         return not is_open
     return is_open
@@ -388,7 +427,18 @@ def toggle_modal(n1, n2, is_open):
     [Input("openTipsGuide", "n_clicks"), Input("closeTips", "n_clicks")],
     [State("modalTips", "is_open")],
 )
-def toggle_modal(n1, n2, is_open):
+def toggle_tips_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+# this callback opens and closes the add review modal
+@callback(
+    Output("modalAddReview", "is_open"),
+    [Input("openAddReviewButton", "n_clicks"), Input("closeAddReview", "n_clicks")],
+    [State("modalAddReview", "is_open")],
+)
+def toggle_addReview_modal(n1, n2, is_open):
     if n1 or n2:
         return not is_open
     return is_open

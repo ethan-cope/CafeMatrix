@@ -13,9 +13,9 @@ def drawModalAddReview():
                         dbc.InputGroup([
                             dbc.InputGroupText("Cafe Name"),
                             html.Br(),
-                            dbc.Input(id="cafeName", type="text", placeholder="Starbucks, etc.")
+                            dbc.Input(id="cafeName", type="text", placeholder="Starbucks, etc.", required=True)
                         ]),
-                        dbc.Textarea(placeholder="Brief thoughts / opinions..."),
+                        dbc.Textarea(id="comments", placeholder="Brief thoughts / opinions..."),
                         html.I("All ratings are from 1 (lowest) to 5 (higest)."),
                         html.Br(),
                         html.I("Tap a category for an explanation on how to use it!")
@@ -29,15 +29,15 @@ def drawModalAddReview():
                         html.H5("Ambiance Ratings",className="card-mono"),
                         dbc.InputGroup([
                             dbc.InputGroupText("Vibe", id="vibeTT"),
-                            dbc.Input(id="vibe", type="number", placeholder="3", style={"text-align":"right"})
+                            dbc.Input(id="vibe", type="number", value="3", style={"text-align":"right"})
                         ]),
                         dbc.InputGroup([
                             dbc.InputGroupText("Seating", id="seatingTT"),
-                            dbc.Input(id="seating", type="number", placeholder="3", style={"text-align":"right"})
+                            dbc.Input(id="seating", type="number", value="3", style={"text-align":"right"})
                         ]),
                         dbc.InputGroup([
                             dbc.InputGroupText("Spark", id = "sparkTT"),
-                            dbc.Input(id="spark", type="number", placeholder="3", style={"text-align":"right"})
+                            dbc.Input(id="spark", type="number", value="3", style={"text-align":"right"})
                         ]),
                     ])
                 ),
@@ -51,15 +51,15 @@ def drawModalAddReview():
                         html.H5("Value and Taste Ratings",className="card-mono"),
                         dbc.InputGroup([
                             dbc.InputGroupText("Taste", id="tasteTT"),
-                            dbc.Input(id="taste", type="number", placeholder="3", style={"text-align":"right"})
+                            dbc.Input(id="taste", type="number", value="3", style={"text-align":"right"})
                         ]),
                         dbc.InputGroup([
                             dbc.InputGroupText("Inexpensiveness", id="costTT"),
-                            dbc.Input(id="cost", type="number", placeholder="3", style={"text-align":"right"})
+                            dbc.Input(id="cost", type="number", value="3", style={"text-align":"right"})
                         ]),
                         dbc.InputGroup([
                             dbc.InputGroupText("Menu Options", id="menuTT"),
-                            dbc.Input(id="menu", type="number", placeholder="3", style={"text-align":"right"})
+                            dbc.Input(id="menu", type="number", value="3", style={"text-align":"right"})
                         ]),
                     ])
                 ),
@@ -74,15 +74,15 @@ def drawModalAddReview():
                         html.H5("Study Suitability Ratings",className="card-mono"),
                         dbc.InputGroup([
                             dbc.InputGroupText("Space", id="spaceTT"),
-                            dbc.Input(id="space", type="number", placeholder="3", style={"text-align":"right"})
+                            dbc.Input(id="space", type="number", value="3", style={"text-align":"right"})
                         ]),
                         dbc.InputGroup([
                             dbc.InputGroupText("Tech", id="techTT"),
-                            dbc.Input(id="tech", type="number", placeholder="3", style={"text-align":"right"})
+                            dbc.Input(id="tech", type="number", value="3", style={"text-align":"right"})
                         ]),
                         dbc.InputGroup([
                             dbc.InputGroupText("Accessibility", id="accessTT"),
-                            dbc.Input(id="access", type="number", placeholder="3", style={"text-align":"right"})
+                            dbc.Input(id="access", type="number", value="3", style={"text-align":"right"})
                         ]),
                     ])
                 ),
@@ -91,15 +91,14 @@ def drawModalAddReview():
                 dbc.Tooltip("How long does it stay open? Is it easy to park at or get to? From 1-5.",target="accessTT"),
 
 
-            ])
+            ]),
 
             #line = "Ding Tea	5	5	2	3	4	4	4	4	5	Somewhat loud local study spot. Couches for groups of 4.	"
 
             # generate review
 
             # invisible text box that becomes tab separated
-
-            # add a submit button
+            html.Div(id="generatedTSVString")
         
         ])
     ]
