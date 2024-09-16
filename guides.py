@@ -93,6 +93,8 @@ def drawModalAddReview():
 
             ]),
 
+            dcc.Checklist(["Download a backup of my matrix (Recommended)"],["Download a backup of my matrix (Recommended)"], id="downloadBackupTSVCheckbox"),
+
             #line = "Ding Tea	5	5	2	3	4	4	4	4	5	Somewhat loud local study spot. Couches for groups of 4.	"
 
             # generate review

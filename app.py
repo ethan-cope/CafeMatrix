@@ -6,7 +6,7 @@ import dash_bootstrap_components as dbc
 import plotly.express as px      
 import plotly.graph_objects as go
 import base64
-from genMatrix import generateMatrix, generateShopBarChart, generateEmptyFigure, extractReviewsFromLocalTSV, extractReviewsFromUploadedTSV, extractDfElementFromTSVString
+from genMatrix import generateMatrix, generateShopBarChart, generateEmptyFigure, extractReviewsFromLocalTSV, extractReviewsFromUploadedTSV, extractDfElementFromTSVString, compressDfElementToTSVString
 from guides import drawModalStartupGuide, drawModalTipsGuide, drawModalAddReview
 
 # import json
@@ -16,7 +16,13 @@ from guides import drawModalStartupGuide, drawModalTipsGuide, drawModalAddReview
 #TODO: user-definable scaling
 #TODO: location selection
 #TODO: better formatting for plotly graphs and different-sized screens
-    # benchmark 13-inch computers since that's what most ppl have
+
+DefaultTSV = """Index >	Ambiance Index			Value Index			Study Suitability Index				
+Sub-Index >	vibe	seating	spark	taste	cost	menu	space	tech	access	comments	[reserved for future updates]
+Sub-Index Description >	decor / overall cafe vibe	crowdedness / seating availability	subjective vibe improvers. friendly baristas, active community, etc.	overall beverage taste	5=cheapest, 1=most expensive	menu diversity, food offerings, and specials	cafe area is study-friendly. Large tables, not cramped, etc.	outlet accessibility, wifi availability / quality	how early / late it's open, how easy to get there	any other uncategorized thoughts	
+Sub-Index Importance Scaling [WIP] >	50%	30%	20%	50%	30%	20%	40%	30%	30%		
+Best	5	5	5	5	5	5	5	5	5	The best possible score for a cafe.	
+Worst	1	1	1	1	1	1	1	1	1	The worst possible score for a cafe.	"""
 
 # initial figure 
 defaultView = 'Default' # Global variable, but read-only so should be ok
@@ -181,7 +187,7 @@ def drawNavBar():
 
                     dbc.DropdownMenuItem(
                         dcc.Upload(         
-                            id='upload-data',         
+                            id='upload-tsv-data',         
                             multiple=False,
                             children=html.Div([             
                                 'Upload ratings (.tsv)'
@@ -204,42 +210,32 @@ def drawNavBar():
 
 @callback(
     Output("downloadTSV", "data"),
+    State('user-ratings', 'data'),
     Input("downloadTSVButton", "n_clicks"),
     prevent_initial_call=True,
 )
-def func(n_clicks):
-    return dcc.send_file(
-        "./CafeMatrixTemplate.tsv"
-    )
+def func(storedData, n_clicks):
+    ### TODO TODO then make this callback trigger off of the tail of the other one 
+    ### See your notes to figure out how to do this
+    populatedTSVString = DefaultTSV
+    
+    for review in storedData:
+        # make sure we don't duplicate the "Best" or "Worst" axis anchors (which is dumb but the only way to enforce the bounds :(
+        if review["shopName"] != "Best" and review["shopName"] != "Worst":
+            populatedTSVString +="\n"
+            populatedTSVString += compressDfElementToTSVString(review)
 
+    return dict(content=populatedTSVString, filename="cafeMatrix.tsv")
 
-#@callback(Output('user-ratings', 'data'),
-#          Input("addReviewButton", "n_clicks"),
-#          State('user-ratings', 'data'))
-#def update_cache_data_from_single_review(contentData, stored_data):
-#    """
-#    This callback is triggered if the user uploads new data through the dialog boxes.
-#    """
-#    if contentData is None:
-#        raise PreventUpdate
-#
-#    # octet stream decoding seems to work fine on linux and windows...
-#    print(stored_data[0])
-#
-#    """
-#    contentData = contentData.split(',')[1]
-#    # dataString is the TSV file as a string
-#    dataString = base64.b64decode(contentData).decode('ascii').strip()
-#    # dataString = base64.b64decode(contentData).decode('utf-8').strip()
-#    dataArray=dataString.split('\n')
-#
-#    """
-#    #return extractReviewsFromUploadedTSV(dataArray)
+#   # this is a fallback of just sending a blank tsv. hopefully this doesn't need to be used but I'm keeping it here
+#   return dcc.send_file(
+#       "./CafeMatrixTemplate.tsv"
+#   )
 
-
+# this callback updates the cache with either the uploaded TSV or the new review
 @callback(Output('user-ratings', 'data'),
           Input("addReviewButton", "n_clicks"),
-          Input('upload-data', 'contents'),
+          Input('upload-tsv-data', 'contents'),
           State('user-ratings', 'data'),
 
           State("cafeName", "value"),
@@ -256,6 +252,10 @@ def func(n_clicks):
           State("space", "value"),
           State("tech", "value"),
           State("access", "value"),
+
+          State('downloadBackupTSVCheckbox', 'value'),
+
+          prevent_initial_call=True,
           )
 def update_cache_data(nclicks, contentData, stored_data, 
                       # the state indices
@@ -292,6 +292,12 @@ def update_cache_data(nclicks, contentData, stored_data,
         # take stored data
         localReviewData = stored_data
 
+        # if their added index isn't valid, don't do anything
+        # if it is valid, calculate the tsv line for just the new shop
+        #   if the review is for an existing shop, update that shop in the matrix 
+        #   then download the TSV
+        #   if the reveiw is a new shop, add that shop to the matrix
+        #   then download the TSV
 
         # validate user input
         if (cafeName is None):
@@ -309,22 +315,25 @@ def update_cache_data(nclicks, contentData, stored_data,
 
             reviewDfElement = extractDfElementFromTSVString(rIdx, line)
 
-            # if there's already a review in this 
+            # if there's already a review for this cafe...
             for i in range(len(localReviewData)):
                 # if we have a duplicate review, replace the existing review
                 #print(localReviewData[i]["shopIndex"], " ---- ", reviewDfElement["shopIndex"])
                 if localReviewData[i]["shopName"] == reviewDfElement["shopName"]:
                     print("replaced an existing review")
                     localReviewData[i] = reviewDfElement
-                    #print(localReviewData)
+
                     return localReviewData
             
+            # if the review is not a duplicate, then append it to the list.
             localReviewData.append(reviewDfElement)
+
+            #TODO TODO: use the download thing at this link: https://dash.plotly.com/dash-core-components/download
 
             #print(localReviewData)
 
         #TODO TODO: close the modal here
-        #modalAddReview.close()
+        modalAddReview.close()
         return localReviewData
 
     # to catch all other special cases I didn't think of
@@ -332,9 +341,8 @@ def update_cache_data(nclicks, contentData, stored_data,
         raise PreventUpdate
 
 
-
-
-    # tried to make this client-side but it's hard to do. best to keep this combined for now.
+# reparse the graph     
+# tried to make this client-side but it's hard to do. best to keep this combined for now.
 @callback(
     Output('big-matrix', 'figure'),
     Input('axesSelectOption', 'value'),
@@ -349,7 +357,7 @@ def reparseGraphView(cameraView,ratingData):
     #print(ratingData)
 
     if ratingData is None or not ratingData:
-        fig = generateEmptyFigure("Error parsing rating data.")
+        fig = generateEmptyFigure("No rating data found. Add a rating or upload your backup file!")
         #raise Exception(str(ratingData))
         #raise PreventUpdate
     else:
@@ -461,9 +469,6 @@ App.layout = html.Div([
         dcc.Store(id='user-ratings', storage_type='local')
     ], fluid=True)
 ])
-
-# uncomment for dev
-#App.run_server(debug=True, use_reloader=True)
 
 if __name__ == "__main__":
     #App.run_server(debug=True,use_reloader=True)

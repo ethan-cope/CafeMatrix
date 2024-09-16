@@ -255,7 +255,7 @@ def generateMatrix(reviewsArray):
 
     return fig
 
-def generateEmptyFigure(msg = "No Figure Found"):
+def generateEmptyFigure(msg = "No rating data found!"):
     background = "#e5ecf6"
     fig = go.Figure() 
     #pretty blank figure
@@ -358,6 +358,27 @@ def extractDfElementFromTSVString(rIdx, TSVLine):
     r.calcIndices(sanitizeRatingList(lineArr[1:10]))
     return r.toDfElement()
 
+def compressDfElementToTSVString(dfElement):
+
+    cafeName  = dfElement["shopName"]
+    vibe      = dfElement["subIndexData"]["vibe"]["rating"]
+    seating   = dfElement["subIndexData"]["seating"]["rating"]
+    spark     = dfElement["subIndexData"]["spark"]["rating"]
+    taste     = dfElement["subIndexData"]["taste"]["rating"]
+    cost      = dfElement["subIndexData"]["cost"]["rating"]
+    menu      = dfElement["subIndexData"]["menu"]["rating"]
+    space     = dfElement["subIndexData"]["space"]["rating"]
+    tech      = dfElement["subIndexData"]["tech"]["rating"]
+    access    = dfElement["subIndexData"]["access"]["rating"]
+    comments  = dfElement["extraComments"]
+
+    # note that I actually need to remove the "hits/misses" text which gets generated when the review is added
+    if "<br>" in comments:
+        # split by brs and take the last text which should be just the user's comments 
+        comments = comments.split("<br>")[-1]
+
+    line = "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t" % (cafeName, vibe, seating, spark, taste, cost, menu, space, tech, access, comments)
+    return line
 
 def sanitizeRatingList(rawValues):
     ratingList = (list(map(lambda val: returnValidIndexValue(val), rawValues)))
@@ -365,7 +386,6 @@ def sanitizeRatingList(rawValues):
         ratingList.append(0)
 
     return ratingList
-
 
 def returnValidIndexValue(rawVal):
     """
