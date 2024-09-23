@@ -2,6 +2,62 @@ from dash import Dash, dcc, html, Input, Output, State, callback
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
+# this file contains all of the modals and callbacks that deal with interactions with them.
+
+# this callback opens the startup modal
+@callback(
+    Output("modalStartup", "is_open"),
+    [Input("openStartupGuide", "n_clicks"), Input("closeStartup", "n_clicks")],
+    [State("modalStartup", "is_open")],
+)
+def toggle_startup_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+# this callback opens the tips modal
+@callback(
+    Output("modalTips", "is_open"),
+    [Input("openTipsGuide", "n_clicks"), Input("closeTips", "n_clicks")],
+    [State("modalTips", "is_open")],
+)
+def toggle_tips_modal(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
+
+# this callback opens and closes the add review modal
+# triggered when we request to add a new review, or interact with either button in the modal
+@callback(
+    Output("modalAddReview", "is_open"),
+    Input("openAddReviewButton", "n_clicks"), 
+    Input("closeAddReview", "n_clicks"),
+    Input("addReviewButton", "n_clicks"),
+    State("modalAddReview", "is_open"),
+)
+def toggle_addReview_modal(n1, n2, n3, is_open):
+    if n1 or n2 or n3:
+        return not is_open
+    return is_open
+
+# this callback opens and closes the backup matrix modal
+# triggered when we add a new review or interact with either button in the modal
+@callback(
+    Output("modalDownloadBackup", "is_open"),
+    Input("addReviewButton", "n_clicks"),
+    Input("closeBackup", "n_clicks"),
+    Input("downloadTSVModal", "n_clicks"),
+    State("modalDownloadBackup", "is_open"),
+)
+def toggle_backup_modal(reviewAdded, n1, n2, is_open):
+    if n1 or n2 or reviewAdded:
+        return not is_open
+    return is_open
+
+
+
+
+
 def drawModalAddReview():
     return [
         html.H3("Add a Review",className="card-mono"),
@@ -248,5 +304,4 @@ def drawModalTipsGuide():
             )
         )
     ]
-
 
