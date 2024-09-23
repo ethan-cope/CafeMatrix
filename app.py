@@ -160,6 +160,22 @@ def drawIntroTipsModal():
             size="lg",
             is_open=False,
         ),
+        dbc.Modal(
+            [
+                dbc.ModalBody(html.H4("Back up your matrix?",className="card-mono")),
+                dbc.ModalFooter(dbc.ButtonGroup([
+                    dbc.Button(
+                        "Don't back up", id="closeBackup", className="ms-auto btn-danger", n_clicks=0
+                    ),
+                    dbc.Button(
+                        "Back up Matrix", id="downloadTSVModal", className="ms-auto btn-success", n_clicks=0
+                    )
+                ])),
+            ],
+            id="modalDownloadBackup",
+            size="lg",
+            is_open=False,
+        )
     ])
 
 def drawNavBar():
@@ -176,7 +192,7 @@ def drawNavBar():
                         dcc.Download(
                             id="downloadTSV", 
                         ),
-                        html.Div(["Get Rating Template"], id="downloadTSVButton"),
+                        html.Div(["Get Rating Template"], id="downloadTSVNavbar"),
                         #dbc.NavLink("Get Rating Template", id="downloadTSV", style={"cursor":"pointer"})
                     ]),
 #html.A("Get Rating Template", href="/CafeMatrixTemplate.tsv", download="CafeMatrixTemplate")
@@ -207,16 +223,14 @@ def drawNavBar():
         className = "card-mono"
     )
 
-
 @callback(
-    Output("downloadTSV", "data"),
+    Output('downloadTSV', 'data'),
     State('user-ratings', 'data'),
-    Input("downloadTSVButton", "n_clicks"),
+    Input('downloadTSVNavbar', 'n_clicks'),
+    Input('downloadTSVModal', 'n_clicks'),
     prevent_initial_call=True,
 )
-def func(storedData, n_clicks):
-    ### TODO TODO then make this callback trigger off of the tail of the other one 
-    ### See your notes to figure out how to do this
+def func(storedData, Navbar_n_clicks, Modal_n_clicks):
     populatedTSVString = DefaultTSV
     
     for review in storedData:
@@ -225,7 +239,7 @@ def func(storedData, n_clicks):
             populatedTSVString +="\n"
             populatedTSVString += compressDfElementToTSVString(review)
 
-    return dict(content=populatedTSVString, filename="cafeMatrix.tsv")
+    return dict(content=populatedTSVString, filename="localBackupCafeMatrix.tsv")
 
 #   # this is a fallback of just sending a blank tsv. hopefully this doesn't need to be used but I'm keeping it here
 #   return dcc.send_file(
@@ -253,8 +267,6 @@ def func(storedData, n_clicks):
           State("tech", "value"),
           State("access", "value"),
 
-          State('downloadBackupTSVCheckbox', 'value'),
-
           prevent_initial_call=True,
           )
 def update_cache_data(nclicks, contentData, stored_data, 
@@ -263,11 +275,12 @@ def update_cache_data(nclicks, contentData, stored_data,
                       vibe, seating, spark, 
                       taste, cost, menu, 
                       space, tech, access):
+                      #downloadCheckboxValue):
     """
     This callback is triggered if the user uploads new data through the dialog boxes or they upload their own review
     """
 
-    print(nclicks, cafeName, vibe, seating, spark, taste, cost, menu, space, tech, access, comments)
+    #print(nclicks, cafeName, vibe, seating, spark, taste, cost, menu, space, tech, access, comments)
 
     ## VERY BIG TODO: this is stateless but contentData and nclicks are consistent across sessions so we can't know which one to execute (doesn't flush)
     if contentData is None and (nclicks is None or nclicks == 0):
@@ -328,12 +341,6 @@ def update_cache_data(nclicks, contentData, stored_data,
             # if the review is not a duplicate, then append it to the list.
             localReviewData.append(reviewDfElement)
 
-            #TODO TODO: use the download thing at this link: https://dash.plotly.com/dash-core-components/download
-
-            #print(localReviewData)
-
-        #TODO TODO: close the modal here
-        modalAddReview.close()
         return localReviewData
 
     # to catch all other special cases I didn't think of
@@ -441,13 +448,31 @@ def toggle_tips_modal(n1, n2, is_open):
     return is_open
 
 # this callback opens and closes the add review modal
+# triggered when we request to add a new review, or interact with either button in the modal
 @callback(
     Output("modalAddReview", "is_open"),
-    [Input("openAddReviewButton", "n_clicks"), Input("closeAddReview", "n_clicks")],
-    [State("modalAddReview", "is_open")],
+    Input("openAddReviewButton", "n_clicks"), 
+    Input("closeAddReview", "n_clicks"),
+    Input("addReviewButton", "n_clicks"),
+    State("modalAddReview", "is_open"),
 )
-def toggle_addReview_modal(n1, n2, is_open):
-    if n1 or n2:
+def toggle_addReview_modal(n1, n2, n3, is_open):
+    if n1 or n2 or n3:
+        return not is_open
+    return is_open
+
+# this callback opens and closes the backup matrix modal
+# triggered when we add a new review or interact with either button in the modal
+
+@callback(
+    Output("modalDownloadBackup", "is_open"),
+    Input("addReviewButton", "n_clicks"),
+    Input("closeBackup", "n_clicks"),
+    Input("downloadTSVModal", "n_clicks"),
+    State("modalDownloadBackup", "is_open"),
+)
+def toggle_backup_modal(reviewAdded, n1, n2, is_open):
+    if n1 or n2 or reviewAdded:
         return not is_open
     return is_open
 
