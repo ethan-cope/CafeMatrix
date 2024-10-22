@@ -4,11 +4,6 @@ import plotly.graph_objects as go
 from random import randrange
 import hashlib
 
-#import json
-#import numpy  as np
-# import time
-# not needed as of 11.26.2023
-
 import pandas as pd
 
 # coffee spreadsheeters, rejoice.
@@ -62,9 +57,6 @@ class ShopReview:
         self.extraComments = extraComments
 
     def initIndex(self):
-        # this should only pull data from the spreadsheet once. Once that's been done, we just use the class.
-        # this will eventually calcIdx from a spreadsheet. but for now, just do what we do.
-
         # turn spreadsheet into 2d array here, overwrite the existing array if so.
         # maybe only have this do something once, so we're not checking in with the ss for every rating.
 
@@ -93,7 +85,7 @@ class ShopReview:
         missesString = ""
         hitsString = ""
 
-        # eventually make line breaks in long description here.
+        #TODO: generate line breaks in long description here.
 
         subIndexCounter = 0
         for subIndexName in ShopReview.IndicesMetadata.keys():
@@ -141,7 +133,13 @@ class ShopReview:
         # this will get passed to the plot generator code
         # append to the start of "extracomments" so the info will also be shown. keep extracomments to a minimum!
 
-        self.extraComments = hitsMissesString + self.extraComments
+        modifiedCommentsString = ""
+        if self.extraComments is not None:
+            #modifiedCommentsString = "<b>Comments:</b><br>" + interpolateLineBreaks(self.extraComments, 75)
+            modifiedCommentsString = "<b>Comments:</b><br>" + interpolateLineBreaks(self.extraComments, 45)
+            #modifiedCommentsString = "<b>Comments:</b><br>" + self.extraComments
+
+        self.extraComments = hitsMissesString + modifiedCommentsString
 
     def __str__(self):
         return """Review %s 
@@ -160,7 +158,7 @@ Total:          %.01d / 30
 def generateShopBarChart(indexData, shopName):
     fig = go.Figure()
 
-    #TODO::::: SORT DATAFRAME BY LOW SO THE WORST RATED STUFF IS AT BOTTOM (OR MAYBE TOP?) (WHY?)
+    #TODO later: sort dataframe so the lowest rated index is at the bottom
 
     # making some normalized values to show users on mouse-over
     # otherwise, the calculations don't make sense
@@ -386,6 +384,16 @@ def sanitizeRatingList(rawValues):
         ratingList.append(0)
 
     return ratingList
+
+def interpolateLineBreaks(string, increment):
+    for i in range(increment, len(string), increment):
+        # find the next space so we don't chop a word by mistake
+        nextSpaceIndex = string.find(" ",i)
+        # you could find a way to strip the space here this but it causes issues when we pull out the <br>s later
+        string = string[:nextSpaceIndex] + "<br>" + string[nextSpaceIndex:]
+
+    return string
+
 
 def returnValidIndexValue(rawVal):
     """

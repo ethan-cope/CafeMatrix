@@ -9,13 +9,8 @@ import base64
 from genMatrix import generateMatrix, generateShopBarChart, generateEmptyFigure, extractReviewsFromLocalTSV, extractReviewsFromUploadedTSV, extractDfElementFromTSVString, compressDfElementToTSVString
 from modals import drawModalStartupGuide, drawModalTipsGuide, drawModalAddReview
 
-# import json
-# import pandas as pd
-# not needed as of 11.26.2023
-
-#TODO: user-definable scaling
-#TODO: location selection
-#TODO: better formatting for plotly graphs and different-sized screens
+#TODO Later: user-definable scaling
+#TODO Later: location selection
 
 DefaultTSV = """Index >	Ambiance Index			Value Index			Study Suitability Index				
 Sub-Index >	vibe	seating	spark	taste	cost	menu	space	tech	access	comments	[reserved for future updates]
@@ -95,6 +90,10 @@ def drawSubMatrix():
                                     'height':'65vh'
                                     }
                             ),
+                            html.P(
+                                '',
+                                id='breakdown-text',
+                            ),
                         #])
                     #])
                 ])
@@ -162,7 +161,7 @@ def drawIntroTipsModal():
         ),
         dbc.Modal(
             [
-                dbc.ModalBody(html.H4("Back up your matrix?",className="card-mono")),
+                dbc.ModalBody("Back up your matrix?",className="card-mono"),
                 dbc.ModalFooter(dbc.ButtonGroup([
                     dbc.Button(
                         "Don't back up", id="closeBackup", className="ms-auto btn-danger", n_clicks=0
@@ -184,18 +183,6 @@ def drawNavBar():
             dbc.NavItem(dbc.NavLink("Start!", id="openStartupGuide", n_clicks=0, style={"cursor":"pointer"})),
             dbc.DropdownMenu(
                 children=[
-                    #dbc.DropdownMenuItem(
-                    #    dbc.NavLink("Get Rating Template", href="https://docs.google.com/spreadsheets/d/1qIiK-8SHgQ4qp5Nry18LhIE_MRTTrKplktnkObQukdA/copy", style={"cursor":"pointer"})
-                    #    ),
-
-                    dbc.DropdownMenuItem([
-                        dcc.Download(
-                            id="downloadTSV", 
-                        ),
-                        html.Div(["Get Rating Template"], id="downloadTSVNavbar"),
-                        #dbc.NavLink("Get Rating Template", id="downloadTSV", style={"cursor":"pointer"})
-                    ]),
-#html.A("Get Rating Template", href="/CafeMatrixTemplate.tsv", download="CafeMatrixTemplate")
                     dbc.DropdownMenuItem([
                         html.Div(["Add a Cafe Review"], id="openAddReviewButton"),
                         #dbc.NavLink("Get Rating Template", id="downloadTSV", style={"cursor":"pointer"})
@@ -210,6 +197,13 @@ def drawNavBar():
                             ])         
                         ),     
                     ),
+
+                    dbc.DropdownMenuItem([
+                        dcc.Download(
+                            id="downloadTSV", 
+                        ),
+                        html.Div(["Get Rating Template"], id="downloadTSVNavbar"),
+                    ]),
                 ],
                 className="dropdown-menu-end",
                 nav = True,
@@ -282,7 +276,7 @@ def update_cache_data(nclicks, contentData, stored_data,
 
     #print(nclicks, cafeName, vibe, seating, spark, taste, cost, menu, space, tech, access, comments)
 
-    ## VERY BIG TODO: this is stateless but contentData and nclicks are consistent across sessions so we can't know which one to execute (doesn't flush)
+    #TODO later: this is stateless but contentData and nclicks are consistent across sessions so we can't know which one to execute (doesn't flush)
     if contentData is None and (nclicks is None or nclicks == 0):
         # 2 ways to trigger callback - if both were a mistake then do this
         raise PreventUpdate
@@ -315,7 +309,7 @@ def update_cache_data(nclicks, contentData, stored_data,
         # validate user input
         if (cafeName is None):
 
-            # TODO: inline input sanitization with client-side callbacks
+            #TODO Later: inline input sanitization with client-side callbacks
             # note that the matrix will quietly coerce values that are outside the 1-5 boundaries to 1-5. it's a massive pain to introduce HTML form stuff since this is python instead of HTML.
             print("you're dumb")
 
@@ -404,6 +398,7 @@ def reparseGraphView(cameraView,ratingData):
 @callback(
     Output('breakdown-graph', 'figure'),
     Output('subMatrixCanvas','is_open'),
+    Output('breakdown-text','children'),
     Input('big-matrix', 'clickData'),
     [State('subMatrixCanvas','is_open')],
 )
@@ -413,6 +408,7 @@ def displayBarChart(clickData, is_open):
     '''
     fig = go.Figure() 
     openStat = False
+    shopDescription = ""
 
     if clickData == None:
         fig = generateEmptyFigure(msg = "Select a datapoint to view the sub-matrix.")
@@ -420,10 +416,12 @@ def displayBarChart(clickData, is_open):
     elif clickData:
         indexData = clickData["points"][0]['customdata'][1]
         shopName = (clickData["points"][0]['text'])
+        # description with the html stuff stripped out
+        shopDescription = clickData["points"][0]['customdata'][0].split("Comments:</b><br>")[-1].replace("<br>","")
         fig = generateShopBarChart(indexData, shopName)
         openStat = not is_open
 
-    return fig, openStat
+    return fig, openStat, shopDescription
 
 App = Dash(
     __name__,
