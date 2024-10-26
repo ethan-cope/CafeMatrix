@@ -75,17 +75,13 @@ class ShopReview:
             
    
     def calcIndices(self, ratings):
-
-        # maybe just always call this when initializing... good performance improvement
         if not self.IndicesMetadata:
             self.initIndex()
 
-        # generating mouseover flavor text.
+        # start of mouseover hover flavor text.
         hitsMissesString = "---------------<br>"
         missesString = ""
         hitsString = ""
-
-        #TODO: generate line breaks in long description here.
 
         subIndexCounter = 0
         for subIndexName in ShopReview.IndicesMetadata.keys():
@@ -103,7 +99,7 @@ class ShopReview:
                 self.studyIdx += percentVal * ShopReview.IndicesMetadata[subIndexName]["scaling"]
 
             # adding to hits/misses 
-            # miss if it's < 30%, hit if it's > 70
+            # miss if it's < 20%, hit if it's > 80
 
                 # all of this code also makes these strings pretty
             if (percentVal > .8):
@@ -131,9 +127,9 @@ class ShopReview:
 
         # use the extra text to make a list of hits / misses 
         # this will get passed to the plot generator code
-        # append to the start of "extracomments" so the info will also be shown. keep extracomments to a minimum!
 
         modifiedCommentsString = ""
+        # add line breaks to comments when hovered
         if self.extraComments is not None:
             #modifiedCommentsString = "<b>Comments:</b><br>" + interpolateLineBreaks(self.extraComments, 75)
             modifiedCommentsString = "<b>Comments:</b><br>" + interpolateLineBreaks(self.extraComments, 45)
@@ -156,21 +152,21 @@ Total:          %.01d / 30
         return vars(self)
 
 def generateShopBarChart(indexData, shopName):
+    """This method generates a bar chart breakdown of the Cafe's submatrices.
+    """
     fig = go.Figure()
 
-    #TODO later: sort dataframe so the lowest rated index is at the bottom
+    #TODO later: put the lowest rated index at the bottom of the bar chart (maybe by sorting dataframe?)
 
-    # making some normalized values to show users on mouse-over
-    # otherwise, the calculations don't make sense
+    # magic scaling that I no longer understand. one goal would be to make this user scalable 
     df = pd.DataFrame.from_dict(indexData, orient='index')
     row = (df.loc[:,"rating"] - 1)/4 * df.loc[:,"scaling"]
     df["normalizedVal"] = row
     df["normalizedScale"] = df.loc[:,"scaling"] * 10
     df["normalizedRate"] = df.loc[:,"rating"] - 1
 
-    # TODO: afraid to change this but get rid of the 0?
     df["normalizedRate"] = df["normalizedRate"].clip(lower = 0) # magic replaces all negatives with 0
-    df["normalizedVal"] = df["normalizedVal"].clip(lower = .25) # magic replaces all negatives with .25 (so the bar is still visible, doesn't effect ranking)
+    df["normalizedVal"] = df["normalizedVal"].clip(lower = .25) # magic replaces all negatives with .25 (so the bar is still visible, doesn't affect ranking)
     
     # for df manipulation shenanigans
     # print(df)
@@ -196,8 +192,6 @@ def generateShopBarChart(indexData, shopName):
                       yaxis_title='Aggregate Rating',
                       coloraxis_colorbar=dict(title="SubIndex<br>Rating"),
                       )
-
-        #fig.update_traces(hovertemplate="<b>%{text}</b><br>Ambiance Index: %{x}<br>Value Index: %{y}<br>Study Suitability Index: %{z}<br>%{customdata[0]}")
 
     fig.update_yaxes(range=[0,10])
     fig.update_traces(marker_line_color = 'black', 
@@ -248,7 +242,7 @@ def generateMatrix(reviewsArray):
         )
     )
 
-    # making hover look pretty 
+    # add a short description of cafe on mouseover hover of point
     fig.update_traces(hovertemplate="<b>%{text}</b><br>Ambiance Index: %{x}<br>Value Index: %{y}<br>Study Suitability Index: %{z}<br>%{customdata[0]}")
 
     return fig
@@ -301,7 +295,7 @@ def extractReviewsFromUploadedTSV(uploadedTSVData = ""):
     - values are not a number
     - value not between 1 and 5
 
-    There will be more, but this is good for a beta!
+    There will be more, but this is good for a 1.0!
     """
 
     reviewsArr = []
@@ -342,10 +336,11 @@ def extractReviewsFromUploadedTSV(uploadedTSVData = ""):
     return reviewsArr
 
 def extractDfElementFromTSVString(rIdx, TSVLine):
+    """Accepts TSV string, Returns dataframe element"""
     lineArr=TSVLine.split('\t') 
     # hash the shop name, which will be compared for duplicate reviews of the same place if that's ever a feature to add
     # could be a good thing for future database integration
-    # note this this doesn't work... return later?
+    # TODO (later): this this doesn't work... 
     uniqueShopIdx = hash(lineArr[0]) % 100000000 
 
     # initialize ShopReview object from the line
@@ -357,6 +352,7 @@ def extractDfElementFromTSVString(rIdx, TSVLine):
     return r.toDfElement()
 
 def compressDfElementToTSVString(dfElement):
+    """Accepts dataframe element, Returns TSV string"""
 
     cafeName  = dfElement["shopName"]
     vibe      = dfElement["subIndexData"]["vibe"]["rating"]
@@ -370,15 +366,17 @@ def compressDfElementToTSVString(dfElement):
     access    = dfElement["subIndexData"]["access"]["rating"]
     comments  = dfElement["extraComments"]
 
-    # note that I actually need to remove the "hits/misses" text which gets generated when the review is added
+    # remove the "hits/misses" text which gets generated when the review is added
+    # split by brs and take the last text which should be just the user's comments 
     if "<br>" in comments:
-        # split by brs and take the last text which should be just the user's comments 
         comments = comments.split("<br>")[-1]
 
     line = "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t" % (cafeName, vibe, seating, spark, taste, cost, menu, space, tech, access, comments)
     return line
 
 def sanitizeRatingList(rawValues):
+    """Accepts a list of ratings, returns a list of ratings that are scaled 0-5"""
+    # this may no longer be necessary if I can find a way to implement form in a pythonic way
     ratingList = (list(map(lambda val: returnValidIndexValue(val), rawValues)))
     while(len(ratingList) < 9):
         ratingList.append(0)
@@ -386,6 +384,9 @@ def sanitizeRatingList(rawValues):
     return ratingList
 
 def interpolateLineBreaks(string, increment):
+    """Accepts in a string (comments string
+    Returns a strign with html <br> linebreaks interpolated
+    """
     for i in range(increment, len(string), increment):
         # find the next space so we don't chop a word by mistake
         nextSpaceIndex = string.find(" ",i)
@@ -410,6 +411,7 @@ def returnValidIndexValue(rawVal):
     return indexVal
 
 def extractReviewsFromLocalTSV(localTSVPath = ""):
+    # semi-useless method but good for debugging I guess
     """
     This method takes an a path to a local TSV (which I will shortly change as of 11/18/23) and spits out an array of review objects. 
     Why review objects? Because I wanted to mess with OOP even though a dictionary would have probably worked just as well. 0_0

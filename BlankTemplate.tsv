@@ -2,6 +2,6 @@ Index >	Ambiance Index			Value Index			Study Suitability Index
 Sub-Index >	vibe	seating	spark	taste	cost	menu	space	tech	access	comments	[reserved for future updates]
 Sub-Index Description >	decor / overall cafe vibe	crowdedness / seating availability	subjective vibe improvers. friendly baristas, active community, etc.	overall beverage taste	5=cheapest, 1=most expensive	menu diversity, food offerings, and specials	cafe area is study-friendly. Large tables, not cramped, etc.	outlet accessibility, wifi availability / quality	how early / late it's open, how easy to get there	any other uncategorized thoughts	
 Sub-Index Importance Scaling [WIP] >	50%	30%	20%	50%	30%	20%	40%	30%	30%		
-Best Cafe	5	5	5	5	5	5	5	5	5	The best possible score for a cafe.	
-Worst Cafe	1	1	1	1	1	1	1	1	1	The worst possible score for a cafe.	
-Example Cafe	5	3	3	1	1	3	4	4	5	Example cafe with a good vibe and solid study space, but terrible coffee.	
+Best	5	5	5	5	5	5	5	5	5	The best possible score for a cafe.	
+Worst	1	1	1	1	1	1	1	1	1	The worst possible score for a cafe.	
+Example Cafe	5	3	3	2	2	3	4	4	5	Example cafe with a good vibe and solid study space, but terrible coffee.	

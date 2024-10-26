@@ -9,6 +9,7 @@ import base64
 from genMatrix import generateMatrix, generateShopBarChart, generateEmptyFigure, extractReviewsFromLocalTSV, extractReviewsFromUploadedTSV, extractDfElementFromTSVString, compressDfElementToTSVString
 from modals import drawModalStartupGuide, drawModalTipsGuide, drawModalAddReview
 
+#TODO Now: change user's guide and make popup confirmation for replacing a review instead of print statement.
 #TODO Later: user-definable scaling
 #TODO Later: location selection
 
@@ -79,6 +80,7 @@ def drawCafeMatrix():
             ])
 
 def drawSubMatrix():
+    """This spits out the submatrix with the bar charts for reviews"""
     return dbc.Offcanvas([
             dbc.Col([
                 dbc.Row([
@@ -103,8 +105,10 @@ def drawSubMatrix():
             )
         ],
         id="subMatrixCanvas",
+        placement="bottom",
         is_open=False,
-        style={'min-width':'75vw'}
+        style={'min-height':'80vh'}
+        # TODO (later) - force this to horizontal for PC
     )
 
 def drawIntroTipsModal():       
@@ -296,14 +300,19 @@ def update_cache_data(nclicks, contentData, stored_data,
     elif nclicks != 0 and nclicks is not None:
         # if the callback was triggered by the user adding a new review
 
+        # if this is their first review, use the default TSV
+        if stored_data is None:
+            localReviewData = extractReviewsFromUploadedTSV(DefaultTSV.split('\n'))
+
         # take stored data
-        localReviewData = stored_data
+        else:
+            localReviewData = stored_data
 
         # if their added index isn't valid, don't do anything
         # if it is valid, calculate the tsv line for just the new shop
         #   if the review is for an existing shop, update that shop in the matrix 
         #   then download the TSV
-        #   if the reveiw is a new shop, add that shop to the matrix
+        #   if the review is a new shop, add that shop to the matrix
         #   then download the TSV
 
         # validate user input
@@ -311,7 +320,8 @@ def update_cache_data(nclicks, contentData, stored_data,
 
             #TODO Later: inline input sanitization with client-side callbacks
             # note that the matrix will quietly coerce values that are outside the 1-5 boundaries to 1-5. it's a massive pain to introduce HTML form stuff since this is python instead of HTML.
-            print("you're dumb")
+            pass
+            #print("you're dumb")
 
         else:
             # calculate ID of new review
@@ -327,7 +337,8 @@ def update_cache_data(nclicks, contentData, stored_data,
                 # if we have a duplicate review, replace the existing review
                 #print(localReviewData[i]["shopIndex"], " ---- ", reviewDfElement["shopIndex"])
                 if localReviewData[i]["shopName"] == reviewDfElement["shopName"]:
-                    print("replaced an existing review")
+                    #TODO - make this in the frontend
+                    #print("replaced an existing review")
                     localReviewData[i] = reviewDfElement
 
                     return localReviewData
