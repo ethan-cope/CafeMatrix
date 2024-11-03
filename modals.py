@@ -55,9 +55,6 @@ def toggle_backup_modal(reviewAdded, n1, n2, is_open):
     return is_open
 
 
-
-
-
 def drawModalAddReview():
     return [
         html.H3("Add a Review",className="card-mono"),
@@ -185,54 +182,30 @@ def drawModalStartupGuide():
                     dbc.AccordionItem(
                         [
                             html.P(children = [
-                                    "To get started, click ", 
-                                    html.A("this link", href="https://docs.google.com/spreadsheets/d/1qIiK-8SHgQ4qp5Nry18LhIE_MRTTrKplktnkObQukdA/copy",target="_blank"),
-                                    " to make your own copy of the template spreadsheet! ", 
+                                    "To get started, click ",
+                                    html.B("Update > Add a Cafe Review."),
                                     html.Br(),
-                                    html.I("Note: You'll only do this step once."),
-                                    ]
+                                    html.Br(),
+                                    "Then, fill in the cafe's Ambiance, Value, and Study Suitability categories from 1-5! Don't forget to add a name and any additional comments you have.",
+                                ]
                             ),
+                            html.Img(src="assets/addReviewFormat.jpg", className="img-fluid"),
                         ],
-                        title = "1. Copy matrix template",
+                        title = "1. Add a Cafe Review",
                     ),
                     dbc.AccordionItem(
                         [
                             html.P(children = [
-                                "In this template, every", 
-                                html.B(" row  "),
-                                "is a",
-                                html.B(" unique cafe and your ratings of it. "),
-                                "To add a new rating, simply start a new row with the cafe's name. ",
-                                "Then fill in the cafe's Ambiance, Value, and Study Suitability categories from 1-5! ",
-                                "",
-                            ]),
-                            html.Img(src="assets/addingNewCafeRedBlue.jpg", className="img-fluid"),
-                        ],
-                        title = "2. Rate your cafes",
-                    ),
-                    dbc.AccordionItem(
-                        [
-                            html.P(children = ["Once you're done rating, export your data from Sheets with ",
-                                    html.B("File > Download > Tab Separated Values (.tsv)"),
-                                    "."
-                                    ]
-                                ),
-                            html.Img(src="assets/downloadingAsTSV.jpg", className="img-fluid"),
-                        ],
-                        title = "3. Export your ratings",
-                    ),
-                    dbc.AccordionItem(
-                        [
-                            html.P(children = [
+                                    "Sometimes, browsers will delete the review data. If that happens, you can upload your .tsv backup file!",
+                                    html.Br(),
+                                    html.Br(),
                                     "Back on CafeMatrix.net, click the ", 
                                     html.B("Upload ratings (.tsv)"), 
                                     " button. Select your downloaded data (.tsv) file to populate the matrix!",
-                                    html.Br(),
-                                    html.I("Note: to update the matrix, just repeat steps 2-4!")
                                 ]
                             ),
                         ],
-                        title = "4. Upload to matrix",
+                        title = "2. Upload backup matrix",
                     ),
                 ]
             )

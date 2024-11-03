@@ -119,6 +119,7 @@ def drawIntroTipsModal():
     These are found in the modals file.
     '''
     return html.Div([
+        
         dbc.Modal(
             [
                 dbc.ModalBody(drawModalStartupGuide()),
@@ -295,7 +296,10 @@ def update_cache_data(nclicks, contentData, stored_data,
         # dataString = base64.b64decode(contentData).decode('utf-8').strip()
         dataArray=dataString.split('\n')
 
-        return extractReviewsFromUploadedTSV(dataArray)
+        try:
+            return extractReviewsFromUploadedTSV(dataArray)
+        except Exception as e:
+            return contentData
 
     elif nclicks != 0 and nclicks is not None:
         # if the callback was triggered by the user adding a new review
