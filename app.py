@@ -217,6 +217,11 @@ def drawNavBar():
             ),
             dbc.NavItem(dbc.NavLink("Tips", id="openTipsGuide", n_clicks=0, style={"cursor":"pointer"})),
 
+            dbc.NavItem(children=[
+                html.A(href="https://www.buymeacoffee.com/CafeMatrix", children=[
+                    html.Img(height="80%", src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee?&emoji=&slug=CafeMatrix&button_colour=FFDD00&font_colour=000000&font_family=Poppins&outline_colour=000000&coffee_colour=ffffff")
+                    ]),
+                ]),
         ],
         brand = "CafeMatrix",
         className = "card-mono"
