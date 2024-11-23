@@ -197,9 +197,7 @@ def drawNavBar():
                         dcc.Upload(         
                             id='upload-tsv-data',         
                             multiple=False,
-                            children=html.Div([             
-                                'Upload ratings (.tsv)'
-                            ])         
+                            children=html.Div(['Upload ratings (.tsv)'], id="uploadRatingTsvButton")         
                         ),     
                     ),
 
@@ -252,28 +250,36 @@ def func(storedData, Navbar_n_clicks, Modal_n_clicks):
 
 # this callback updates the cache with either the uploaded TSV or the new review
 @callback(Output('user-ratings', 'data'),
-          Input("addReviewButton", "n_clicks"),
+          Input('addReviewButton', 'n_clicks'),
           Input('upload-tsv-data', 'contents'),
+          State('uploadRatingTsvButton', 'n_clicks'),
+          State('addReviewButton', 'n_clicks_timestamp'),
+          State('uploadRatingTsvButton', 'n_clicks_timestamp'),
           State('user-ratings', 'data'),
 
-          State("cafeName", "value"),
-          State("comments", "value"),
+          State('cafeName', 'value'),
+          State('comments', 'value'),
 
-          State("vibe", "value"),
-          State("seating", "value"),
-          State("spark", "value"),
+          State('vibe', 'value'),
+          State('seating', 'value'),
+          State('spark', 'value'),
           
-          State("taste", "value"),
-          State("cost", "value"),
-          State("menu", "value"),
+          State('taste', 'value'),
+          State('cost', 'value'),
+          State('menu', 'value'),
 
-          State("space", "value"),
-          State("tech", "value"),
-          State("access", "value"),
+          State('space', 'value'),
+          State('tech', 'value'),
+          State('access', 'value'),
 
           prevent_initial_call=True,
           )
-def update_cache_data(nclicks, contentData, stored_data, 
+def update_cache_data(nClicksAddReview, contentData, 
+
+                      # non-callback triggering n_clicks methods
+                      nClicksUploadReviewTsv, timestampAddReview, timestampUploadReviewTsv,
+                      # the stored datea 
+                      stored_data, 
                       # the state indices
                       cafeName, comments,
                       vibe, seating, spark, 
@@ -284,14 +290,25 @@ def update_cache_data(nclicks, contentData, stored_data,
     This callback is triggered if the user uploads new data through the dialog boxes or they upload their own review
     """
 
-    #print(nclicks, cafeName, vibe, seating, spark, taste, cost, menu, space, tech, access, comments)
+    # note that according to the documentation, this should default to -1. it doesn't.
+    if timestampUploadReviewTsv is None:
+        timestampUploadReviewTsv = -1 
+    if timestampAddReview is None:
+        timestampAddReview = -1 
 
-    #TODO later: this is stateless but contentData and nclicks are consistent across sessions so we can't know which one to execute (doesn't flush)
-    if contentData is None and (nclicks is None or nclicks == 0):
+    if (nClicksUploadReviewTsv != 0) and (nClicksUploadReviewTsv is not None) and (contentData is not None) and (timestampUploadReviewTsv >= timestampAddReview):
+        callbackTrigger = "uploadReviewTsv"
+    elif (nClicksAddReview != 0) and (nClicksAddReview is not None) and (timestampAddReview >= timestampUploadReviewTsv):
+        callbackTrigger = "addReview"
+
+    if contentData is None and (nClicksAddReview is None or nClicksAddReview == 0):
         # 2 ways to trigger callback - if both were a mistake then do this
         raise PreventUpdate
 
-    elif contentData is not None:
+    #print("when you have previously uploaded, contentdata is set so we default to that.")
+    #print("need a method of determining whether we want to update from TSV or update the review itself")
+
+    elif (callbackTrigger == "uploadReviewTsv"):
         # if the callback was triggered by the upload button
 
         # octet stream decoding seems to work fine on linux and windows...
@@ -304,9 +321,10 @@ def update_cache_data(nclicks, contentData, stored_data,
         try:
             return extractReviewsFromUploadedTSV(dataArray)
         except Exception as e:
+            print(e)
             return contentData
 
-    elif nclicks != 0 and nclicks is not None:
+    elif (callbackTrigger == "addReview"):
         # if the callback was triggered by the user adding a new review
 
         # if this is their first review, use the default TSV
@@ -337,6 +355,7 @@ def update_cache_data(nclicks, contentData, stored_data,
             rIdx = localReviewData[-1]["rID"] + 1
 
             #line = "Ding Tea	5	5	2	3	4	4	4	4	5	Somewhat loud local study spot. Couches for groups of 4.	"
+            #print("\n1.creating line for %s" % cafeName)
             line = "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t" % (cafeName, vibe, seating, spark, taste, cost, menu, space, tech, access, comments)
 
             reviewDfElement = extractDfElementFromTSVString(rIdx, line)
@@ -353,7 +372,9 @@ def update_cache_data(nclicks, contentData, stored_data,
                     return localReviewData
             
             # if the review is not a duplicate, then append it to the list.
+            #print("\n2adding dataframe to matrix", reviewDfElement)
             localReviewData.append(reviewDfElement)
+            #print("\n3. here is total review:", localReviewData)
 
         return localReviewData
 
