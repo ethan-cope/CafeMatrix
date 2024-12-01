@@ -2,3 +2,21 @@
 .card-mono {
 	font-family: monospace;
 }
+
+.inputSliderLabelDiv {
+	border-radius: .25rem;
+	border: 1px solid #dfe3e6;
+	padding: .25rem;
+	background: #F8F9FB;
+	text-align: center; 
+	vertical-align: middle;
+}
+
+.inputSliderDiv {
+	border-radius: .25rem;
+	border: 1px solid #dfe3e6;
+	padding: .25rem;
+	background: white;
+	text-align: center; 
+	vertical-align: middle;
+}

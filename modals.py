@@ -69,10 +69,7 @@ def drawModalAddReview():
                             dbc.Input(id="cafeName", type="text", placeholder="Starbucks, etc.", required=True)
                         ]),
                         dbc.Textarea(id="comments", placeholder="Brief thoughts / opinions..."),
-                        html.I("All ratings are from 1 (lowest) to 5 (higest)."),
-                        html.Br(),
-                        html.I("Tap a category for an explanation on how to use it!")
-                        #html.I("Tap the for more information")
+                        html.I("Tap a category for rating suggestions!")
                     ])
                 )
             ]),
@@ -80,72 +77,159 @@ def drawModalAddReview():
                 dbc.Card(
                     dbc.CardBody([
                         html.H5("Ambiance Ratings",className="card-mono"),
-                        dbc.InputGroup([
-                            dbc.InputGroupText("Vibe", id="vibeTT"),
-                            dbc.Input(id="vibe", type="number", value="3", style={"text-align":"right"})
+                        dbc.Row([
+                            dbc.Col("Vibe (Coolness)", id="vibeTT",className="inputSliderLabelDiv"),
+                            dbc.Col([
+                                dcc.Slider(1,5,
+                                    value=3,
+                                    marks={
+                                        1 : {'label':'meh...'}, # poor
+                                        3 : {'label':'good'}, # fine
+                                        5 : {'label':'great!'}, # great
+                                    },
+                                    step=2,
+                                    id="vibe"
+                                )],width=8, className="inputSliderDiv")
                         ]),
-                        dbc.InputGroup([
-                            dbc.InputGroupText("Seating", id="seatingTT"),
-                            dbc.Input(id="seating", type="number", value="3", style={"text-align":"right"})
+                        dbc.Row([
+                            dbc.Col("Seating (Availablity)", id="seatingTT",className="inputSliderLabelDiv"),
+                            dbc.Col([
+                                dcc.Slider(1,5,
+                                    value=3,
+                                    marks={
+                                        1 : {'label':'meh...'},
+                                        3 : {'label':'good'},
+                                        5 : {'label':'great!'},
+                                    },
+                                    step=2,
+                                    id="seating"
+                                )],width=8, className="inputSliderDiv")
                         ]),
-                        dbc.InputGroup([
-                            dbc.InputGroupText("Spark", id = "sparkTT"),
-                            dbc.Input(id="spark", type="number", value="3", style={"text-align":"right"})
+                        dbc.Row([
+                            dbc.Col("Spark (Quirkiness)", id="sparkTT",className="inputSliderLabelDiv"),
+                            dbc.Col([
+                                dcc.Slider(1,5,
+                                    value=3,
+                                    marks={
+                                        1 : {'label':'meh...'},
+                                        3 : {'label':'good'},
+                                        5 : {'label':'great!'},
+                                    },
+                                    step=2,
+                                    id="spark"
+                                )],width=8, className="inputSliderDiv")
                         ]),
                     ])
                 ),
-                dbc.Tooltip("Is the decor / vibe good? From 1-5. ",target="vibeTT"),
-                dbc.Tooltip("Are seats easy to find and the cafe non-crowded? From 1-5. ",target="seatingTT"),
-                dbc.Tooltip("Anything special about this place? Nice baristas? tabletop games? Becomes a bar at night? Active part of community?  rank here, from 1-5.",target="sparkTT"),
+                dbc.Tooltip("Is the decor / vibe good?",target="vibeTT"),
+                dbc.Tooltip("Are seats easy to find and the cafe non-crowded?",target="seatingTT"),
+                dbc.Tooltip("Anything special about this place? Nice baristas? tabletop games? Becomes a bar at night? Active part of community?",target="sparkTT"),
             ]),
             dbc.Row([
                 dbc.Card(
                     dbc.CardBody([
                         html.H5("Value and Taste Ratings",className="card-mono"),
-                        dbc.InputGroup([
-                            dbc.InputGroupText("Taste", id="tasteTT"),
-                            dbc.Input(id="taste", type="number", value="3", style={"text-align":"right"})
+                        dbc.Row([
+                            dbc.Col("Taste", id="tasteTT",className="inputSliderLabelDiv"),
+                            dbc.Col([
+                                dcc.Slider(1,5,
+                                    value=3,
+                                    marks={
+                                        1 : {'label':'meh...'}, # poor
+                                        3 : {'label':'good'}, # fine
+                                        5 : {'label':'great!'}, # great
+                                    },
+                                    step=2,
+                                    id="taste"
+                                )],width=8, className="inputSliderDiv")
                         ]),
-                        dbc.InputGroup([
-                            dbc.InputGroupText("Inexpensiveness", id="costTT"),
-                            dbc.Input(id="cost", type="number", value="3", style={"text-align":"right"})
+                        dbc.Row([
+                            dbc.Col("Price", id="costTT",className="inputSliderLabelDiv"),
+                            dbc.Col([
+                                dcc.Slider(1,5,
+                                    value=3,
+                                    marks={
+                                        1 : {'label':'meh...'},
+                                        3 : {'label':'good'},
+                                        5 : {'label':'great!'},
+                                    },
+                                    step=2,
+                                    id="cost"
+                                )],width=8, className="inputSliderDiv")
                         ]),
-                        dbc.InputGroup([
-                            dbc.InputGroupText("Menu Options", id="menuTT"),
-                            dbc.Input(id="menu", type="number", value="3", style={"text-align":"right"})
+                        dbc.Row([
+                            dbc.Col("Menu Variety", id="menuTT",className="inputSliderLabelDiv"),
+                            dbc.Col([
+                                dcc.Slider(1,5,
+                                    value=3,
+                                    marks={
+                                        1 : {'label':'meh...'},
+                                        3 : {'label':'good'},
+                                        5 : {'label':'great!'},
+                                    },
+                                    step=2,
+                                    id="menu"
+                                )],width=8, className="inputSliderDiv")
                         ]),
                     ])
                 ),
-                dbc.Tooltip("How good are the drinks here? From 1-5 ",target="tasteTT"),
-                dbc.Tooltip("How expensive are the drinks here? NOTE that 5 = least expensive, 1 = most expensive. From 1-5.",target="costTT"),
-                dbc.Tooltip("Do they have cool specials? Do they roast or sell their own beans? Good food / cocktails too? all that goes here. From 1-5.",target="menuTT"),
+                dbc.Tooltip("How good do the drinks taste here?",target="tasteTT"),
+                dbc.Tooltip("Are the drinks worth the price here?",target="costTT"),
+                dbc.Tooltip("Do they have cool specialty drinks? Do they roast or sell their own beans? Good food / cocktails too? all that goes here.",target="menuTT"),
 
             ]),
             dbc.Row([
                 dbc.Card(
                     dbc.CardBody([
                         html.H5("Study Suitability Ratings",className="card-mono"),
-                        dbc.InputGroup([
-                            dbc.InputGroupText("Space", id="spaceTT"),
-                            dbc.Input(id="space", type="number", value="3", style={"text-align":"right"})
+                        dbc.Row([
+                            dbc.Col("Study Space", id="spaceTT",className="inputSliderLabelDiv"),
+                            dbc.Col([
+                                dcc.Slider(1,5,
+                                    value=3,
+                                    marks={
+                                        1 : {'label':'meh...'}, # poor
+                                        3 : {'label':'good'}, # fine
+                                        5 : {'label':'great!'}, # great
+                                    },
+                                    step=2,
+                                    id="space"
+                                )],width=8, className="inputSliderDiv")
                         ]),
-                        dbc.InputGroup([
-                            dbc.InputGroupText("Tech", id="techTT"),
-                            dbc.Input(id="tech", type="number", value="3", style={"text-align":"right"})
+                        dbc.Row([
+                            dbc.Col("Outlets / WiFi", id="techTT",className="inputSliderLabelDiv"),
+                            dbc.Col([
+                                dcc.Slider(1,5,
+                                    value=3,
+                                    marks={
+                                        1 : {'label':'meh...'},
+                                        3 : {'label':'good'},
+                                        5 : {'label':'great!'},
+                                    },
+                                    step=2,
+                                    id="tech"
+                                )],width=8, className="inputSliderDiv")
                         ]),
-                        dbc.InputGroup([
-                            dbc.InputGroupText("Accessibility", id="accessTT"),
-                            dbc.Input(id="access", type="number", value="3", style={"text-align":"right"})
+                        dbc.Row([
+                            dbc.Col("Hours / Accessibility", id="accessTT",className="inputSliderLabelDiv"),
+                            dbc.Col([
+                                dcc.Slider(1,5,
+                                    value=3,
+                                    marks={
+                                        1 : {'label':'meh...'},
+                                        3 : {'label':'good'},
+                                        5 : {'label':'great!'},
+                                    },
+                                    step=2,
+                                    id="access"
+                                )],width=8, className="inputSliderDiv")
                         ]),
                     ])
                 ),
-                dbc.Tooltip("How good is the space for studying? Big tables? Lots of room to spread out? From 1-5.",target="spaceTT"),
-                dbc.Tooltip("How fast is the internet here? Are there lots of charging outlets? From 1-5.",target="techTT"),
-                dbc.Tooltip("How long does it stay open? Is it easy to park at or get to? From 1-5.",target="accessTT"),
-
-
+                dbc.Tooltip("How good is the space for studying? Big tables? Lots of room to spread out?",target="spaceTT"),
+                dbc.Tooltip("How fast is the internet here? Are there lots of charging outlets?",target="techTT"),
+                dbc.Tooltip("How long does it stay open? Is it easy to park at or get to?",target="accessTT"),
             ]),
-
 
             #line = "Ding Tea	5	5	2	3	4	4	4	4	5	Somewhat loud local study spot. Couches for groups of 4.	"
 

@@ -71,6 +71,20 @@ def drawCafeMatrix():
                                     ],
                                     style={"gap":"10px"},
                                 ),
+                                html.H5("Breakdown View", className="card-mono"),
+                                html.Div([
+                                    dbc.RadioItems(
+                                        ['Off', 'On'],
+                                        'Off',
+                                        inline=True,
+                                        id='advancedView',
+                                        labelStyle={'marginTop':'5px',
+                                                    'cursor': 'pointer',}
+                                    )
+                                    ],
+                                    style={"gap":"10px"},
+                                ),
+
                             ])
                         ])
                     ])
@@ -442,8 +456,9 @@ def reparseGraphView(cameraView,ratingData):
     Output('breakdown-text','children'),
     Input('big-matrix', 'clickData'),
     [State('subMatrixCanvas','is_open')],
+    State('advancedView', 'value'),
 )
-def displayBarChart(clickData, is_open):
+def displayBarChart(clickData, is_open, advancedViewSel):
     '''
     This callback generates the bar chart for the matrix the user clicks on.
     '''
@@ -454,9 +469,16 @@ def displayBarChart(clickData, is_open):
     if clickData == None:
         fig = generateEmptyFigure(msg = "Select a datapoint to view the sub-matrix.")
 
+    elif advancedViewSel == "Off":
+        # if we don't have advanced view on, don't show the whole submatrix breakdown.
+        # we need this b/c phones can't hover - clicking is their hover.
+        fig = generateEmptyFigure(msg = "Select a datapoint to view the sub-matrix.")
+        return fig, openStat, shopDescription
+
     elif clickData:
         indexData = clickData["points"][0]['customdata'][1]
-        shopName = (clickData["points"][0]['text'])
+        # since we changed shopName to customdata[2]
+        shopName = (clickData["points"][0]['customdata'][2])
         # description with the html stuff stripped out
         shopDescription = clickData["points"][0]['customdata'][0].split("Comments:</b><br>")[-1].replace("<br>","")
         fig = generateShopBarChart(indexData, shopName)

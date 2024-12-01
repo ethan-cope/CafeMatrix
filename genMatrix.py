@@ -216,9 +216,9 @@ def generateMatrix(reviewsArray):
                          z='studyIdx', 
                          color='Total',
                          color_continuous_scale='Fall',
-                         text='shopName',
-                         hover_name='shopName',
-                         custom_data=['extraComments', 'subIndexData'],
+                         text="shopName",
+                         # note that shopName was previously set as Text, but this looks ugly when too many cafes have been rated. I had to move it to custom_data[2]
+                         custom_data=['extraComments', 'subIndexData', 'shopName'],
                          )
 
     fig.update_layout(
@@ -243,7 +243,9 @@ def generateMatrix(reviewsArray):
     )
 
     # add a short description of cafe on mouseover hover of point
-    fig.update_traces(hovertemplate="<b>%{text}</b><br>Ambiance Index: %{x}<br>Value Index: %{y}<br>Study Suitability Index: %{z}<br>%{customdata[0]}")
+    fig.update_traces(hovertemplate="<b>%{customdata[2]}</b><br>Ambiance Index: %{x}<br>Value Index: %{y}<br>Study Suitability Index: %{z}<br>%{customdata[0]}")
+
+    #to add the names back in, you will need a different generation command
 
     return fig
 
